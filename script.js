@@ -23,12 +23,19 @@ const collectionSeries = [
 ];
 
 if (collectionGrid) {
-  const collectionWorks = Array.from({ length: 131 }, (_, index) => {
-    const title = `${collectionSeries[index % collectionSeries.length]} No. ${String(index + 1).padStart(3, '0')}`;
-    const extension = index < 115 ? 'png' : 'jpg';
-    const image = `assets/collection/original-${String(index + 1).padStart(3, '0')}.${extension}`;
-    return { title, image };
-  });
+  const namedOriginals = {
+    116: { title: 'Cradled Log', image: 'assets/collection/cradled-log.jpg' },
+  };
+
+  const excludedOriginals = new Set([1, 2, 3, 5]);
+  const collectionWorks = Array.from({ length: 116 }, (_, index) => index + 1)
+    .filter((number) => !excludedOriginals.has(number))
+    .map((number) => {
+    const title = `${collectionSeries[(number - 1) % collectionSeries.length]} No. ${String(number).padStart(3, '0')}`;
+    const extension = number <= 115 ? 'png' : 'jpg';
+    const image = `assets/collection/original-${String(number).padStart(3, '0')}.${extension}`;
+    return namedOriginals[number] ?? { title, image };
+    });
 
   collectionGrid.innerHTML = collectionWorks.map(({ title, image }, index) => `
     <article class="collection-work">
