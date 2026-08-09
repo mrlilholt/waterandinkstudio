@@ -61,11 +61,22 @@ if (collectionGrid) {
   const namedOriginals = {
     116: { title: 'Cradled Log', image: 'assets/collection/cradled-log.jpg' },
     117: { title: 'Bamboo Study No. 015', image: 'assets/collection/bamboo-study-015.png' },
+    118: { title: 'Mountain Mist No. 009', image: 'assets/collection/mountain-mist-009.png' },
+    119: { title: 'Pine & Stone No. 014', image: 'assets/collection/pine-and-stone-014.png' },
+    120: { title: 'Tokyo Ramen No. 001', image: 'assets/collection/tokyo-ramen-001.png' },
+    121: { title: 'Enso No. 013', image: 'assets/collection/enso-013.png' },
+    122: { title: 'Three Peaks No. 001', image: 'assets/collection/three-peaks-001.png' },
+    123: { title: 'Mountain Mist No. 010', image: 'assets/collection/mountain-mist-010.png' },
+    124: { title: 'Osaka Fish Market No. 001', image: 'assets/collection/osaka-fish-market-001.png' },
+    125: { title: 'Pine & Stone No. 015', image: 'assets/collection/pine-and-stone-015.png' },
+    126: { title: 'Tokyo Corner Market No. 001', image: 'assets/collection/tokyo-corner-market-001.png' },
+    127: { title: 'Steamed Bun Stand No. 001', image: 'assets/collection/steamed-bun-stand-001.png' },
+    128: { title: 'Enso No. 014', image: 'assets/collection/enso-014.png' },
   };
 
   const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106]);
   const etsyOriginals = new Set([4, 77, 95, 109, 117]);
-  const collectionWorks = Array.from({ length: 117 }, (_, index) => index + 1)
+  const collectionWorks = Array.from({ length: 128 }, (_, index) => index + 1)
     .filter((number) => !excludedOriginals.has(number))
     .map((number) => {
     const title = workTitles[number] ?? `Untitled Original No. ${String(number).padStart(3, '0')}`;
