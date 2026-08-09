@@ -40,3 +40,12 @@
 .inquiry-form .button { border:0; cursor:pointer; margin-top:.5rem; width:max-content; }
 .dialog-close { background:transparent; border:0; color:var(--ink); cursor:pointer; font-size:2rem; line-height:1; position:absolute; right:1rem; top:1rem; }
 @media (max-width:760px) { .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:2rem .7rem; }.collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:.78; } }
+
+/* Lead capture */
+.journal-line { gap:40px; }
+.journal h2 { margin:0; font:400 clamp(1.8rem,3vw,3.3rem)/1 Fraunces, Georgia, serif; letter-spacing:-.04em; max-width:620px; }
+.journal-detail { font-size:14px; line-height:1.7; margin:18px 0 0; max-width:530px; }
+.notes-form { flex:0 1 440px; }
+.notes-contact { font-size:14px; line-height:1.7; margin:0 0 1.2rem; max-width:360px; }
+.notes-form .button { border:0; cursor:pointer; white-space:nowrap; }
+@media (max-width:760px) { .notes-form { margin-top:30px; }.notes-form .button { justify-content:space-between; width:100%; } }
