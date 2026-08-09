@@ -22,10 +22,21 @@
 .collection-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2.8rem 1.05rem; }
 .collection-work { min-width:0; }
 .collection-work a { color:inherit; display:block; text-decoration:none; }
+.collection-work button { appearance:none; background:transparent; border:0; color:inherit; cursor:pointer; display:block; font:inherit; padding:0; text-align:left; width:100%; }
+.collection-work-featured { border-top:2px solid var(--red); padding-top:.55rem; }
 .collection-work img { aspect-ratio:.78; background:#e9e4dc; display:block; filter:saturate(.86); object-fit:cover; transition:transform .45s ease,filter .45s ease; width:100%; }
 .collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:1.18; }
 .collection-work:hover img { filter:saturate(1); transform:scale(1.018); }
 .collection-work-meta { border-top:1px solid var(--line); margin-top:.7rem; padding-top:.8rem; }
 .collection-work h3 { font-family:Fraunces,Georgia,serif; font-size:1.13rem; font-weight:400; }
 .collection-work p { color:var(--moss); font-size:.69rem; letter-spacing:.08em; margin:.3rem 0 0; text-transform:uppercase; }
+.inquiry-dialog { background:var(--paper); border:1px solid var(--ink); color:var(--ink); max-width:min(92vw,530px); padding:0; width:100%; }
+.inquiry-dialog::backdrop { background:rgba(22,32,29,.55); }
+.inquiry-form { display:grid; gap:1rem; padding:2rem; position:relative; }
+.inquiry-form h2 { font:400 clamp(2.1rem,6vw,3.5rem)/.95 Fraunces,Georgia,serif; letter-spacing:-.05em; margin:0; }
+.inquiry-artwork { font:500 .8rem "DM Mono",monospace; letter-spacing:.05em; margin:0 0:.5rem; text-transform:uppercase; }
+.inquiry-form label { display:grid; font:500 .7rem "DM Mono",monospace; gap:.45rem; letter-spacing:.08em; text-transform:uppercase; }
+.inquiry-form input,.inquiry-form textarea { background:transparent; border:1px solid var(--line); color:var(--ink); font:400 1rem/1.45 Fraunces,Georgia,serif; padding:.7rem; resize:vertical; }
+.inquiry-form .button { border:0; cursor:pointer; margin-top:.5rem; width:max-content; }
+.dialog-close { background:transparent; border:0; color:var(--ink); cursor:pointer; font-size:2rem; line-height:1; position:absolute; right:1rem; top:1rem; }
 @media (max-width:760px) { .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:2rem .7rem; }.collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:.78; } }
