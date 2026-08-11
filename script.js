@@ -72,11 +72,13 @@ if (collectionGrid) {
     126: { title: 'Tokyo Corner Market No. 001', image: 'assets/collection/tokyo-corner-market-001.png' },
     127: { title: 'Steamed Bun Stand No. 001', image: 'assets/collection/steamed-bun-stand-001.png' },
     128: { title: 'Enso No. 014', image: 'assets/collection/enso-014.png' },
+    129: { title: 'Study in Stillness', image: 'assets/collection/study-in-stillness.png' },
+    130: { title: 'Enso No. 15 “Growth”', image: 'assets/collection/enso-015-growth.png' },
   };
 
   const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106]);
   const etsyOriginals = new Set([4, 77, 95, 109, 117]);
-  const collectionWorks = Array.from({ length: 128 }, (_, index) => index + 1)
+  const collectionWorks = Array.from({ length: 130 }, (_, index) => index + 1)
     .filter((number) => !excludedOriginals.has(number))
     .map((number) => {
     const title = workTitles[number] ?? `Untitled Original No. ${String(number).padStart(3, '0')}`;
