@@ -16,6 +16,36 @@ document.querySelectorAll('nav a').forEach((link) => link.addEventListener('clic
 document.querySelector('#year').textContent = new Date().getFullYear();
 
 const collectionGrid = document.querySelector('#collection-grid');
+const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
+const newArrivals = [
+  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png' },
+  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png' },
+  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png' },
+  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png' },
+  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png' },
+  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png' },
+  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png' },
+];
+const etsyOriginals = new Set([4, 77, 95, 109, 117]);
+
+const renderCollectionWorks = (grid, works) => {
+  if (!grid) return;
+  grid.innerHTML = works.map(({ number, title, image }, index) => {
+    const isEtsyWork = etsyOriginals.has(number);
+    const action = isEtsyWork
+      ? `<a href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer" aria-label="View ${title} in the Etsy shop">`
+      : `<button class="inquiry-trigger" type="button" data-artwork-title="${title}" aria-label="Make a purchase inquiry for ${title}">`;
+    const actionEnd = isEtsyWork ? '</a>' : '</button>';
+    return `
+    <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
+      ${action}
+        <img src="${image}" alt="${title} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
+        <div class="collection-work-meta"><h3>${title}</h3><p>Original · ${isEtsyWork ? 'Featured on Etsy ↗' : 'Purchase inquiry'}</p></div>
+      ${actionEnd}
+    </article>
+  `;
+  }).join('');
+};
 const workTitles = {
   4: 'Rising Water No. 001', 6: 'Stone Watchtower No. 001', 7: 'Cliff Walker No. 001',
   8: 'Pine & Stone No. 001', 9: 'Enso No. 001', 10: 'Pine & Stone No. 002',
@@ -77,7 +107,6 @@ if (collectionGrid) {
   };
 
   const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106]);
-  const etsyOriginals = new Set([4, 77, 95, 109, 117]);
   const collectionWorks = Array.from({ length: 130 }, (_, index) => index + 1)
     .filter((number) => !excludedOriginals.has(number))
     .map((number) => {
@@ -88,22 +117,10 @@ if (collectionGrid) {
   })
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
-  collectionGrid.innerHTML = collectionWorks.map(({ number, title, image }, index) => {
-    const isEtsyWork = etsyOriginals.has(number);
-    const action = isEtsyWork
-      ? `<a href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer" aria-label="View ${title} in the Etsy shop">`
-      : `<button class="inquiry-trigger" type="button" data-artwork-title="${title}" aria-label="Make a purchase inquiry for ${title}">`;
-    const actionEnd = isEtsyWork ? '</a>' : '</button>';
-    return `
-    <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
-      ${action}
-        <img src="${image}" alt="${title} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
-        <div class="collection-work-meta"><h3>${title}</h3><p>Original · ${isEtsyWork ? 'Featured on Etsy ↗' : 'Purchase inquiry'}</p></div>
-      ${actionEnd}
-    </article>
-  `;
-  }).join('');
+  renderCollectionWorks(collectionGrid, [...newArrivals, ...collectionWorks]);
 }
+
+renderCollectionWorks(newArrivalsGrid, newArrivals);
 
 const inquiryDialog = document.querySelector('#inquiry-dialog');
 const inquiryForm = document.querySelector('#inquiry-form');

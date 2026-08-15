@@ -19,6 +19,9 @@
 @media (max-width:760px) { .hero-art img { min-height:360px; }.works-wall { grid-template-columns:repeat(2,1fr); gap:6px; }.works-wall img,.works-wall img:nth-child(4n + 2) { height:170px; }.works-wall img:nth-child(4n) { grid-column:span 2; height:190px; } }
 
 .collection-note { margin:0 0 3rem; color:var(--moss); font-size:.86rem; letter-spacing:.04em; }
+.new-arrivals { background:#e9e4dc; }
+.new-arrivals .collection-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.new-arrivals .collection-work img { aspect-ratio:1.05; }
 .collection-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:2.8rem 1.05rem; }
 .collection-work { min-width:0; }
 .collection-work a { color:inherit; display:block; text-decoration:none; }
@@ -40,6 +43,7 @@
 .inquiry-form .button { border:0; cursor:pointer; margin-top:.5rem; width:max-content; }
 .dialog-close { background:transparent; border:0; color:var(--ink); cursor:pointer; font-size:2rem; line-height:1; position:absolute; right:1rem; top:1rem; }
 @media (max-width:760px) { .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:2rem .7rem; }.collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:.78; } }
+@media (max-width:760px) { .new-arrivals .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.new-arrivals .collection-work img { aspect-ratio:.78; } }
 
 /* Lead capture */
 .journal-line { gap:40px; }
