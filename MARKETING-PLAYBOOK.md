@@ -15,7 +15,7 @@ Use one call to action per post. Do not put all three destinations in every capt
 ## Setup checklist
 
 - [ ] Deploy the updated site.
-- [ ] Confirm that `lilholtapps@gmail.com` receives mail, since the site now opens a direct email for every inquiry.
+- [ ] Confirm that `waterandinkstudio@gmail.com` receives mail, since the site now opens a direct email for every inquiry.
 - [ ] Add the website to your Instagram, TikTok, Pinterest, Etsy, and Printify profiles.
 - [ ] Create a Pinterest business account and claim the website.
 - [ ] Keep a simple sheet with date, post, URL, views, saves, link clicks, inquiries, and sales.

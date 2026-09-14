@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Studio Uploads — Water &amp; Ink Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=5" />
+  </head>
+  <body>
+    <main class="studio-page">
+      <div class="studio-shell">
+        <header class="studio-header">
+          <a class="wordmark" href="index.html" aria-label="Return to Water and Ink Studio"><span class="jp" lang="ja">みずとすみ</span><span>WATER &amp; INK<br />STUDIO</span></a>
+          <button class="studio-signout" id="sign-out" type="button" hidden>Sign out</button>
+        </header>
+        <section class="studio-panel" id="auth-panel">
+          <p class="eyebrow">Private studio</p>
+          <h1>Bring in<br /><em>new work.</em></h1>
+          <p>Sign in with the Google account connected to Water &amp; Ink Studio to add artwork from your phone.</p>
+          <button class="button button-dark" id="google-sign-in" type="button">Continue with Google <span>↗</span></button>
+          <p class="studio-status" id="auth-status" role="status"></p>
+        </section>
+        <section class="studio-panel" id="upload-panel" hidden>
+          <p class="eyebrow">New original</p>
+          <h2>Add artwork</h2>
+          <p>Publishing makes the work appear in the full collection. Mark it as a New Arrival to also place it at the top of that collection.</p>
+          <form class="studio-form" id="artwork-form">
+            <label>Artwork image <input name="image" type="file" accept="image/png,image/jpeg,image/webp" required /></label>
+            <label>Title <input name="title" autocomplete="off" placeholder="e.g. Pine & Stone No. 016" required /></label>
+            <label>Description <textarea name="description" placeholder="Optional notes, materials, or story behind the work."></textarea></label>
+            <label>Availability <select name="availability"><option value="available">Available</option><option value="sold">Sold</option><option value="inquiry">Purchase inquiry</option></select></label>
+            <label>Shop link <input name="etsy_url" type="url" placeholder="Optional Etsy listing URL" /></label>
+            <label class="checkbox"><input name="new_arrival" type="checkbox" checked /> New Arrival</label>
+            <label class="checkbox"><input name="is_published" type="checkbox" checked /> Publish now</label>
+            <button class="button button-dark" type="submit">Publish artwork <span>↗</span></button>
+            <p class="studio-status" id="upload-status" role="status"></p>
+          </form>
+        </section>
+      </div>
+    </main>
+    <script src="supabase-config.js"></script>
+    <script type="module" src="studio.js"></script>
+  </body>
+</html>
