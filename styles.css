@@ -53,3 +53,22 @@
 .notes-contact { font-size:14px; line-height:1.7; margin:0 0 1.2rem; max-width:360px; }
 .notes-form .button { border:0; cursor:pointer; white-space:nowrap; }
 @media (max-width:760px) { .notes-form { margin-top:30px; }.notes-form .button { justify-content:space-between; width:100%; } }
+
+/* Private studio uploader */
+.studio-page { min-height:100vh; padding:6vw 4vw 10vw; }
+.studio-shell { margin:0 auto; max-width:880px; }
+.studio-header { align-items:center; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; margin-bottom:5vw; padding-bottom:1.3rem; }
+.studio-header h1 { font:400 clamp(2.7rem,6vw,5.5rem)/.9 Fraunces,Georgia,serif; letter-spacing:-.06em; margin:0; }
+.studio-panel { border:1px solid var(--line); padding:clamp(1.3rem,4vw,3rem); }
+.studio-panel h2 { font:400 clamp(2rem,4vw,3rem)/1 Fraunces,Georgia,serif; letter-spacing:-.05em; margin:0 0:1rem; }
+.studio-panel > p { line-height:1.7; max-width:580px; }
+.studio-form { display:grid; gap:1.25rem; margin-top:2rem; }
+.studio-form label { display:grid; font:500 .7rem "DM Mono",monospace; gap:.45rem; letter-spacing:.08em; text-transform:uppercase; }
+.studio-form input,.studio-form textarea,.studio-form select { background:transparent; border:1px solid var(--line); color:var(--ink); font:400 1rem/1.45 Fraunces,Georgia,serif; padding:.8rem; width:100%; }
+.studio-form textarea { min-height:130px; resize:vertical; }
+.studio-form .checkbox { align-items:center; display:flex; gap:.7rem; font-size:.75rem; }
+.studio-form .checkbox input { accent-color:var(--red); height:1.1rem; width:1.1rem; }
+.studio-status { font:400 .8rem/1.5 "DM Mono",monospace; min-height:1.5rem; }
+.studio-status.error { color:#9f261d; }.studio-status.success { color:#3d6249; }
+.studio-signout { background:transparent; border:0; border-bottom:1px solid var(--ink); color:var(--ink); cursor:pointer; font:11px "DM Mono",monospace; padding:0 0 5px; text-transform:uppercase; }
+@media (max-width:760px) { .studio-page { padding:10vw 6vw; }.studio-header { align-items:flex-start; flex-direction:column; gap:1.25rem; }.studio-panel { padding:1.4rem; } }

@@ -17,6 +17,7 @@ document.querySelector('#year').textContent = new Date().getFullYear();
 
 const collectionGrid = document.querySelector('#collection-grid');
 const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
+let baseCollectionWorks = [];
 const newArrivals = [
   { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png' },
   { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png' },
@@ -117,10 +118,23 @@ if (collectionGrid) {
   })
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
-  renderCollectionWorks(collectionGrid, [...newArrivals, ...collectionWorks]);
+  baseCollectionWorks = collectionWorks;
+  renderCollectionWorks(collectionGrid, [...newArrivals, ...baseCollectionWorks]);
 }
 
 renderCollectionWorks(newArrivalsGrid, newArrivals);
+
+window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
+  if (!Array.isArray(artworks)) return;
+  const publishedWorks = artworks.map((artwork) => ({
+    number: artwork.id,
+    title: artwork.title,
+    image: artwork.imageUrl,
+  }));
+  const remoteNewArrivals = publishedWorks.filter((_, index) => artworks[index].new_arrival);
+  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...newArrivals]);
+  renderCollectionWorks(collectionGrid, [...publishedWorks, ...newArrivals, ...baseCollectionWorks]);
+});
 
 const inquiryDialog = document.querySelector('#inquiry-dialog');
 const inquiryForm = document.querySelector('#inquiry-form');
@@ -137,6 +151,6 @@ inquiryForm?.addEventListener('submit', (event) => {
   const data = new FormData(inquiryForm);
   const subject = `Purchase inquiry: ${data.get('artwork')}`;
   const body = `Artwork: ${data.get('artwork')}\nName: ${data.get('name')}\nEmail: ${data.get('email')}\n\nMessage:\n${data.get('message')}`;
-  window.location.href = `mailto:lilholtapps@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = `mailto:waterandinkstudio@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   inquiryDialog.close();
 });
