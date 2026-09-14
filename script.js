@@ -97,6 +97,17 @@ const workTitles = {
 const staticArtworkUpdates = {
   100: { description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
 };
+const portraitOriginals = new Set([
+  1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+  36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 48, 49, 50, 51, 52, 53, 54, 55, 58, 59, 60, 63, 64, 65,
+  118, 119, 120, 121, 122, 123, 124, 127, 128, 129, 130,
+]);
+const bannerOriginals = new Set([14, 30, 57, 61, 62]);
+const guessedArtworkPricing = (number) => {
+  if (bannerOriginals.has(number)) return { description: '18 × 36 in (3 ft banner)', priceCents: 12500 };
+  if (portraitOriginals.has(number)) return { description: '8.5 × 11 in', priceCents: 3500 };
+  return { description: 'Approx. 18 × 18 in', priceCents: 4800 };
+};
 
 if (collectionGrid) {
   const namedOriginals = {
@@ -124,7 +135,7 @@ if (collectionGrid) {
     const title = workTitles[number] ?? `Untitled Original No. ${String(number).padStart(3, '0')}`;
     const extension = number <= 115 ? 'png' : 'jpg';
     const image = `assets/collection/original-${String(number).padStart(3, '0')}.${extension}`;
-    return { number, ...(namedOriginals[number] ?? { title, image }), ...(staticArtworkUpdates[number] ?? {}) };
+    return { number, ...(namedOriginals[number] ?? { title, image }), ...guessedArtworkPricing(number), ...(staticArtworkUpdates[number] ?? {}) };
   })
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
