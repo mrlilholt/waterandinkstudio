@@ -82,6 +82,20 @@
         </form>
       </dialog>
 
+      <dialog class="artwork-dialog" id="artwork-dialog" aria-labelledby="artwork-preview-title">
+        <button class="dialog-close" type="button" onclick="this.closest('dialog').close()" aria-label="Close artwork preview">×</button>
+        <div class="artwork-dialog-grid">
+          <img id="artwork-preview-image" alt="" />
+          <div class="artwork-dialog-copy">
+            <p class="eyebrow">Original artwork</p>
+            <h2 id="artwork-preview-title"></h2>
+            <p id="artwork-preview-description"></p>
+            <p class="artwork-preview-price" id="artwork-preview-price"></p>
+            <button class="button button-dark" id="artwork-preview-inquiry" type="button">Purchase inquiry <span>↗</span></button>
+          </div>
+        </div>
+      </dialog>
+
       <section class="wearables" aria-labelledby="wear-title">
         <div class="wear-art"><img src="assets/gallery/66e319d34bf9596c.jpg" alt="Water and Ink Studio work printed on a shirt" /><div class="shirt"><span>水</span></div><p>WORN<br />WORKS</p></div>
         <div class="wear-copy"><p class="eyebrow">The print shop</p><h2 id="wear-title">Art that<br /><em>comes with you.</em></h2><p>Selected studio works made for shirts and small everyday things. Printed to order through Printify.</p><a class="button button-light" href="https://chicken-of-the-woods.printify.me" target="_blank" rel="noreferrer">Visit the print shop <span>↗</span></a></div>

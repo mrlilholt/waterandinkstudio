@@ -19,30 +19,37 @@ const collectionGrid = document.querySelector('#collection-grid');
 const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
 let baseCollectionWorks = [];
 const newArrivals = [
-  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png' },
-  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png' },
-  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png' },
-  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png' },
-  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png' },
-  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png' },
-  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png' },
+  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
+  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
+  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
+  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
+  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
+  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15000 },
+  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
 ];
 const etsyOriginals = new Set([4, 77, 95, 109, 117]);
+const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+}[character]));
+const formatPrice = (priceCents) => Number.isInteger(priceCents) ? `$${(priceCents / 100).toFixed(2).replace(/\.00$/, '')}` : '';
 
 const renderCollectionWorks = (grid, works) => {
   if (!grid) return;
-  grid.innerHTML = works.map(({ number, title, image }, index) => {
+  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null }, index) => {
     const isEtsyWork = etsyOriginals.has(number);
+    const safeTitle = escapeHtml(title);
+    const safeDescription = escapeHtml(description);
+    const safeImage = escapeHtml(image);
+    const price = formatPrice(priceCents);
     const action = isEtsyWork
-      ? `<a href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer" aria-label="View ${title} in the Etsy shop">`
-      : `<button class="inquiry-trigger" type="button" data-artwork-title="${title}" aria-label="Make a purchase inquiry for ${title}">`;
-    const actionEnd = isEtsyWork ? '</a>' : '</button>';
+      ? `<a class="collection-shop-link" href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
+      : `<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
     return `
     <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
-      ${action}
-        <img src="${image}" alt="${title} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
-        <div class="collection-work-meta"><h3>${title}</h3><p>Original · ${isEtsyWork ? 'Featured on Etsy ↗' : 'Purchase inquiry'}</p></div>
-      ${actionEnd}
+      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" aria-label="View larger image of ${safeTitle}">
+        <img src="${safeImage}" alt="${safeTitle} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
+      </button>
+      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${action}</div>
     </article>
   `;
   }).join('');
@@ -79,13 +86,16 @@ const workTitles = {
   89: 'Architectural Study No. 002', 90: 'Architectural Study No. 003', 91: 'Architectural Study No. 004',
   92: 'Architectural Study No. 005', 93: 'Pine & Stone No. 013', 94: 'Village Color No. 001',
   95: 'Bird Study No. 005', 96: 'Untitled Original No. 096', 97: 'Market Study No. 001',
-  98: 'Box Study No. 001', 99: 'Mushroom Study No. 004', 100: 'Blue Wave Enso No. 001',
+  98: 'Box Study No. 001', 99: 'Mushroom Study No. 004', 100: 'Wave Enso No. 002',
   101: 'Enso No. 012', 102: 'Bamboo Study No. 010', 103: 'Path Walker No. 002',
   104: 'Bird Study No. 002', 105: 'Mushroom Study No. 001', 106: 'Untitled Original No. 106',
   107: 'Mushroom Study No. 002', 108: 'Yokai Study No. 001', 109: 'Bird Study No. 003',
   110: 'Blossom Tree No. 002', 111: 'Mushroom Study No. 003', 112: 'Mountain Mist No. 008',
   113: 'Daruma No. 001', 114: 'Octopus No. 002', 115: 'Rushing Water No. 002',
   116: 'Cradled Log No. 001',
+};
+const staticArtworkUpdates = {
+  100: { description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
 };
 
 if (collectionGrid) {
@@ -114,7 +124,7 @@ if (collectionGrid) {
     const title = workTitles[number] ?? `Untitled Original No. ${String(number).padStart(3, '0')}`;
     const extension = number <= 115 ? 'png' : 'jpg';
     const image = `assets/collection/original-${String(number).padStart(3, '0')}.${extension}`;
-    return { number, ...(namedOriginals[number] ?? { title, image }) };
+    return { number, ...(namedOriginals[number] ?? { title, image }), ...(staticArtworkUpdates[number] ?? {}) };
   })
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
@@ -130,6 +140,8 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
     number: artwork.id,
     title: artwork.title,
     image: artwork.imageUrl,
+    description: artwork.description,
+    priceCents: artwork.price_cents,
   }));
   const remoteNewArrivals = publishedWorks.filter((_, index) => artworks[index].new_arrival);
   renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...newArrivals]);
@@ -138,13 +150,36 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
 
 const inquiryDialog = document.querySelector('#inquiry-dialog');
 const inquiryForm = document.querySelector('#inquiry-form');
+const artworkDialog = document.querySelector('#artwork-dialog');
 
-document.querySelectorAll('.inquiry-trigger').forEach((trigger) => trigger.addEventListener('click', () => {
-  const { artworkTitle } = trigger.dataset;
+const openInquiry = (artworkTitle) => {
   inquiryDialog.querySelector('#inquiry-artwork').textContent = artworkTitle;
   inquiryForm.elements.artwork.value = artworkTitle;
   inquiryDialog.showModal();
-}));
+};
+
+document.addEventListener('click', (event) => {
+  const inquiryTrigger = event.target.closest('.inquiry-trigger');
+  if (inquiryTrigger) {
+    openInquiry(inquiryTrigger.dataset.artworkTitle);
+    return;
+  }
+  const preview = event.target.closest('.artwork-preview');
+  if (!preview) return;
+  const { artworkTitle, artworkImage, artworkDescription, artworkPrice } = preview.dataset;
+  artworkDialog.querySelector('#artwork-preview-image').src = artworkImage;
+  artworkDialog.querySelector('#artwork-preview-image').alt = artworkTitle;
+  artworkDialog.querySelector('#artwork-preview-title').textContent = artworkTitle;
+  artworkDialog.querySelector('#artwork-preview-description').textContent = artworkDescription;
+  artworkDialog.querySelector('#artwork-preview-price').textContent = artworkPrice;
+  artworkDialog.querySelector('#artwork-preview-inquiry').dataset.artworkTitle = artworkTitle;
+  artworkDialog.showModal();
+});
+
+document.querySelector('#artwork-preview-inquiry')?.addEventListener('click', (event) => {
+  artworkDialog.close();
+  openInquiry(event.currentTarget.dataset.artworkTitle);
+});
 
 inquiryForm?.addEventListener('submit', (event) => {
   event.preventDefault();

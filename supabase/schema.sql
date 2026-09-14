@@ -6,6 +6,8 @@ create table if not exists public.artworks (
   title text not null check (char_length(title) between 1 and 180),
   description text,
   image_path text not null unique,
+  size_option text not null default 'Custom',
+  price_cents integer check (price_cents is null or price_cents >= 0),
   availability text not null default 'available' check (availability in ('available', 'sold', 'inquiry')),
   etsy_url text,
   new_arrival boolean not null default true,
