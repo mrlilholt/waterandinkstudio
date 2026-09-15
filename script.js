@@ -20,14 +20,15 @@ const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
 let baseCollectionWorks = [];
 let publishedRemoteWorks = [];
 let legacyCheckoutByNumber = {};
+let legacySettingsByNumber = {};
 const newArrivals = [
-  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
-  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
-  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
-  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
-  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
-  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15700 },
-  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 13200 },
+  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700, new_arrival: true },
+  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700, new_arrival: true },
+  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700, new_arrival: true },
+  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700, new_arrival: true },
+  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700, new_arrival: true },
+  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15700, new_arrival: true },
+  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 13200, new_arrival: true },
 ];
 const etsyOriginals = new Set([4, 77, 95, 109, 117]);
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -63,12 +64,21 @@ const renderCollectionWorks = (grid, works) => {
 };
 const withLegacyCheckouts = (works) => works.map((work) => ({
   ...work,
-  checkoutUrl: work.availability === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
+  title: legacySettingsByNumber[work.number]?.title ?? work.title,
+  description: legacySettingsByNumber[work.number]?.description ?? work.description,
+  image: legacySettingsByNumber[work.number]?.image_url ?? work.image,
+  priceCents: legacySettingsByNumber[work.number]?.price_cents ?? work.priceCents,
+  availability: legacySettingsByNumber[work.number]?.availability ?? work.availability ?? 'available',
+  etsyUrl: legacySettingsByNumber[work.number]?.etsy_url ?? work.etsyUrl,
+  is_published: legacySettingsByNumber[work.number]?.is_published ?? work.is_published ?? true,
+  new_arrival: legacySettingsByNumber[work.number]?.new_arrival ?? work.new_arrival ?? false,
+  checkoutUrl: (legacySettingsByNumber[work.number]?.availability ?? work.availability) === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
 }));
 const renderArtworkCatalog = () => {
   const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
-  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...withLegacyCheckouts(newArrivals)]);
-  renderCollectionWorks(collectionGrid, [...publishedRemoteWorks, ...withLegacyCheckouts(newArrivals), ...withLegacyCheckouts(baseCollectionWorks)]);
+  const legacyWorks = withLegacyCheckouts([...newArrivals, ...baseCollectionWorks]).filter((artwork) => artwork.is_published !== false);
+  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...legacyWorks.filter((artwork) => artwork.new_arrival)]);
+  renderCollectionWorks(collectionGrid, [...publishedRemoteWorks, ...legacyWorks]);
 };
 const workTitles = {
   4: 'Rising Water No. 001', 6: 'Stone Watchtower No. 001', 7: 'Cliff Walker No. 001',
@@ -200,6 +210,11 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
 
 window.addEventListener('legacy-store-links-ready', ({ detail: links }) => {
   legacyCheckoutByNumber = Object.fromEntries(links.map((link) => [link.legacy_number, link]));
+  renderArtworkCatalog();
+});
+
+window.addEventListener('legacy-artwork-settings-ready', ({ detail: settings }) => {
+  legacySettingsByNumber = Object.fromEntries(settings.map((setting) => [setting.legacy_number, setting]));
   renderArtworkCatalog();
 });
 

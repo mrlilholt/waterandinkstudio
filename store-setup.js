@@ -38,18 +38,25 @@ if (!config?.url || !config?.anonKey) {
       setStatus(storeStatus, 'Catalog data is still loading. Please refresh this page.', 'error');
       return;
     }
-    const { data: links, error } = await supabase
-      .from('legacy_artwork_links')
-      .select('legacy_number');
-    if (error) {
+    const [{ data: links, error: linksError }, { data: settings, error: settingsError }] = await Promise.all([
+      supabase.from('legacy_artwork_links').select('legacy_number'),
+      supabase.from('legacy_artwork_settings').select('legacy_number,price_cents,availability'),
+    ]);
+    if (linksError || settingsError) {
       setStatus(storeStatus, 'The store-links database table is not ready yet. Run the new Supabase migration first.', 'error');
       return;
     }
     const linkedNumbers = new Set((links || []).map((link) => String(link.legacy_number)));
-    pendingWorks = works.filter((work) => (
+    const settingsByNumber = Object.fromEntries((settings || []).map((setting) => [setting.legacy_number, setting]));
+    pendingWorks = works.map((work) => ({
+      ...work,
+      priceCents: settingsByNumber[String(work.number)]?.price_cents ?? work.priceCents,
+      availability: settingsByNumber[String(work.number)]?.availability ?? work.availability,
+    })).filter((work) => (
       !etsyNumbers.has(work.number)
       && Number.isInteger(work.priceCents)
       && work.priceCents > 0
+      && work.availability !== 'sold'
       && !linkedNumbers.has(String(work.number))
     ));
     const linkedCount = linkedNumbers.size;
@@ -89,6 +96,7 @@ if (!config?.url || !config?.anonKey) {
     generate.disabled = true;
     let created = 0;
     let failed = 0;
+    let firstFailure = '';
     const sourceUrl = window.location.origin;
     const { data: { session: activeSession } } = await supabase.auth.getSession();
     for (const work of pendingWorks) {
@@ -119,11 +127,12 @@ if (!config?.url || !config?.anonKey) {
         created += 1;
       } catch (error) {
         failed += 1;
+        firstFailure ||= error.message || 'Unknown error';
         console.error(`Checkout creation failed for ${work.title}`, error);
       }
     }
     setStatus(storeStatus, failed
-      ? `${created} links created. ${failed} did not complete; use the button again to retry only those.`
+      ? `${created} links created. ${failed} did not complete. First error: ${firstFailure}`
       : `${created} Stripe checkout links created. They are now live on the collection.`, failed ? 'error' : 'success');
     await loadStore();
   });

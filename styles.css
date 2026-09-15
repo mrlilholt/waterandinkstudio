@@ -88,6 +88,12 @@
 .studio-status { font:400 .8rem/1.5 "DM Mono",monospace; min-height:1.5rem; }
 .studio-status.error { color:#9f261d; }.studio-status.success { color:#3d6249; }
 .studio-artwork-list { display:grid; gap:.8rem; margin-top:1.8rem; }
+.studio-catalog-manager { display:grid; gap:1.5rem; grid-template-columns:minmax(220px,.75fr) minmax(0,1.25fr); margin-top:1.8rem; }
+.studio-catalog-manager .studio-artwork-list { margin-top:0; max-height:70vh; overflow:auto; padding-right:.5rem; }
+.studio-artwork-list button { align-items:center; background:transparent; border:0; border-top:1px solid var(--line); color:var(--ink); cursor:pointer; display:flex; font:inherit; gap:.8rem; justify-content:space-between; padding:.85rem 0; text-align:left; width:100%; }
+.studio-artwork-list button:hover,.studio-artwork-list button[aria-current="true"] { color:var(--red); }
+.studio-artwork-list button strong { font:400 1rem Fraunces,Georgia,serif; }.studio-artwork-list button span { color:var(--moss); font:500 .65rem "DM Mono",monospace; text-transform:uppercase; }
+.studio-editor { border-left:1px solid var(--line); margin-top:0; padding-left:1.5rem; }.studio-editor h3 { font:400 1.8rem Fraunces,Georgia,serif; margin:0; }
 .studio-price-editor { align-items:center; border-top:1px solid var(--line); display:grid; gap:.7rem; grid-template-columns:1.6fr 1.4fr .8fr auto; padding-top:.85rem; }
 .studio-price-editor strong { font:400 1.15rem Fraunces,Georgia,serif; }.studio-price-editor span { color:var(--moss); font-size:.8rem; }
 .studio-price-editor input { background:transparent; border:1px solid var(--line); color:var(--ink); font:400 1rem Fraunces,Georgia,serif; padding:.55rem; width:100%; }
@@ -96,3 +102,4 @@
 .store-note { color:var(--moss); font-size:.86rem; line-height:1.65; max-width:650px; }
 @media (max-width:760px) { .studio-page { padding:10vw 6vw; }.studio-header { align-items:flex-start; flex-direction:column; gap:1.25rem; }.studio-panel { padding:1.4rem; } }
 @media (max-width:760px) { .studio-price-editor { align-items:start; grid-template-columns:1fr 1fr; }.studio-price-editor strong { grid-column:span 2; }.studio-price-editor .button { justify-content:center; } }
+@media (max-width:760px) { .studio-catalog-manager { grid-template-columns:1fr; }.studio-catalog-manager .studio-artwork-list { max-height:360px; }.studio-editor { border-left:0; border-top:1px solid var(--line); padding-left:0; padding-top:1.5rem; } }

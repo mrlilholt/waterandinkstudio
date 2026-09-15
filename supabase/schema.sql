@@ -11,6 +11,8 @@ create table if not exists public.artworks (
   availability text not null default 'available' check (availability in ('available', 'sold', 'inquiry')),
   etsy_url text,
   stripe_payment_url text,
+  stripe_product_id text,
+  stripe_payment_link_id text,
   new_arrival boolean not null default true,
   is_published boolean not null default true,
   created_at timestamptz not null default now()
@@ -59,5 +61,25 @@ create table if not exists public.legacy_artwork_links (
 alter table public.legacy_artwork_links enable row level security;
 create policy "Public can view legacy checkout links" on public.legacy_artwork_links for select using (true);
 create policy "Studio owner manages legacy checkout links" on public.legacy_artwork_links for all to authenticated
+  using ((auth.jwt() ->> 'email') = 'waterandinkstudio@gmail.com')
+  with check ((auth.jwt() ->> 'email') = 'waterandinkstudio@gmail.com');
+
+create table if not exists public.legacy_artwork_settings (
+  legacy_number text primary key,
+  title text,
+  description text,
+  image_url text,
+  size_option text,
+  price_cents integer check (price_cents is null or price_cents >= 0),
+  availability text check (availability in ('available', 'sold', 'inquiry')),
+  etsy_url text,
+  is_published boolean,
+  new_arrival boolean,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.legacy_artwork_settings enable row level security;
+create policy "Public can view legacy artwork settings" on public.legacy_artwork_settings for select using (true);
+create policy "Studio owner manages legacy artwork settings" on public.legacy_artwork_settings for all to authenticated
   using ((auth.jwt() ->> 'email') = 'waterandinkstudio@gmail.com')
   with check ((auth.jwt() ->> 'email') = 'waterandinkstudio@gmail.com');
