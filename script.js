@@ -37,15 +37,18 @@ const formatPrice = (priceCents) => Number.isInteger(priceCents) ? `$${(priceCen
 
 const renderCollectionWorks = (grid, works) => {
   if (!grid) return;
-  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null, checkoutUrl = '', etsyUrl = '' }, index) => {
+  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null, checkoutUrl = '', etsyUrl = '', availability = 'available' }, index) => {
     const isEtsyWork = Boolean(etsyUrl) || etsyOriginals.has(number);
+    const isSold = availability === 'sold';
     const safeTitle = escapeHtml(title);
     const safeDescription = escapeHtml(description);
     const safeImage = escapeHtml(image);
     const safeCheckoutUrl = escapeHtml(checkoutUrl);
     const safeEtsyUrl = escapeHtml(etsyUrl || 'https://www.etsy.com/shop/WATERandINKSTUDIOArt');
     const price = formatPrice(priceCents);
-    const purchaseActions = isEtsyWork
+    const purchaseActions = isSold
+      ? '<span class="collection-sold">Sold</span>'
+      : isEtsyWork
       ? `<a class="collection-shop-link" href="${safeEtsyUrl}" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
       : `${safeCheckoutUrl ? `<a class="collection-shop-link collection-buy-link" href="${safeCheckoutUrl}" target="_blank" rel="noreferrer">Buy now ↗</a>` : ''}<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
     return `
@@ -60,7 +63,7 @@ const renderCollectionWorks = (grid, works) => {
 };
 const withLegacyCheckouts = (works) => works.map((work) => ({
   ...work,
-  checkoutUrl: legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || '',
+  checkoutUrl: work.availability === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
 }));
 const renderArtworkCatalog = () => {
   const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
@@ -108,7 +111,29 @@ const workTitles = {
   116: 'Cradled Log No. 001',
 };
 const staticArtworkUpdates = {
-  100: { description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
+  15: { priceCents: 12500 },
+  23: { priceCents: 4800 },
+  24: { priceCents: 4800 },
+  40: { priceCents: 12500 },
+  49: { priceCents: 4800 },
+  52: { priceCents: 7500 },
+  60: { priceCents: 12500 },
+  63: { priceCents: 12500 },
+  64: { priceCents: 12500 },
+  65: { priceCents: 4800 },
+  73: { priceCents: 12500 },
+  74: { priceCents: 12500 },
+  77: { priceCents: 12500 },
+  85: { priceCents: 12500 },
+  100: { description: '18 × 36 in (3 ft banner)', priceCents: 17500 },
+  103: { priceCents: 12500 },
+  117: { priceCents: 12500 },
+  118: { availability: 'sold' },
+  120: { priceCents: 4800 },
+  122: { priceCents: 7500 },
+  124: { priceCents: 4800 },
+  127: { priceCents: 4800 },
+  128: { priceCents: 4800 },
 };
 const portraitOriginals = new Set([
   1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -141,7 +166,7 @@ if (collectionGrid) {
     130: { title: 'Enso No. 15 “Growth”', image: 'assets/collection/enso-015-growth.png' },
   };
 
-  const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106]);
+  const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106, 129, 130]);
   const collectionWorks = Array.from({ length: 130 }, (_, index) => index + 1)
     .filter((number) => !excludedOriginals.has(number))
     .map((number) => {

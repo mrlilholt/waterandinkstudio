@@ -27,9 +27,10 @@
 .collection-work a { color:inherit; display:block; text-decoration:none; }
 .collection-work button { appearance:none; background:transparent; border:0; color:inherit; cursor:pointer; display:block; font:inherit; padding:0; text-align:left; width:100%; }
 .artwork-preview { overflow:hidden; }
-.collection-work .collection-shop-link,.collection-work .inquiry-trigger { color:var(--moss); font:500 .67rem "DM Mono",monospace; letter-spacing:.08em; margin-top:.8rem; text-transform:uppercase; width:auto; }
+.collection-work .collection-shop-link,.collection-work .inquiry-trigger,.collection-sold { color:var(--moss); font:500 .67rem "DM Mono",monospace; letter-spacing:.08em; margin-top:.8rem; text-transform:uppercase; width:auto; }
 .collection-work .collection-shop-link + .inquiry-trigger { margin-left:.9rem; }
 .collection-work .inquiry-trigger { border-bottom:1px solid var(--moss); padding-bottom:.25rem; }
+.collection-sold { color:var(--red); display:inline-block; }
 .collection-work-featured { border-top:2px solid var(--red); padding-top:.55rem; }
 .collection-work img { aspect-ratio:.78; background:#e9e4dc; display:block; filter:saturate(.86); object-fit:cover; transition:transform .45s ease,filter .45s ease; width:100%; }
 .collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:1.18; }
