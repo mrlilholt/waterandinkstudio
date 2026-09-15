@@ -43,13 +43,17 @@ export default async (request) => {
   if (!(await isOwner(request))) return json({ error: 'Unauthorized.' }, 401);
 
   try {
-    const { title, description, imageUrl, priceCents, artworkId = '' } = await request.json();
+    const { title, description, imageUrl, priceCents, artworkId = '', stripeProductId = '', previousPaymentLinkId = '' } = await request.json();
     if (!title || !imageUrl || !Number.isInteger(priceCents) || priceCents < 1) {
       return json({ error: 'Artwork title, image, and price are required.' }, 400);
     }
 
-    const stableId = String(artworkId || title).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').slice(0, 180);
-    const product = await stripeRequest('products', {
+    const stableId = String(artworkId || title).toLowerCase().replace(/[^a-z0-9_-]+/g, '-').slice(0, 140);
+    const requestId = `${stableId}-${priceCents}`;
+    if (previousPaymentLinkId) {
+      await stripeRequest(`payment_links/${previousPaymentLinkId}`, { active: 'false' }, `water-ink-disable-${requestId}`);
+    }
+    const product = stripeProductId ? { id: stripeProductId } : await stripeRequest('products', {
       name: title,
       description: description || 'One-of-one original artwork from Water & Ink Studio.',
       'images[0]': imageUrl,
@@ -60,14 +64,14 @@ export default async (request) => {
       currency: 'usd',
       unit_amount: String(priceCents),
       'metadata[artwork_id]': artworkId,
-    }, `water-ink-price-${stableId}`);
+    }, `water-ink-price-${requestId}`);
     const paymentLink = await stripeRequest('payment_links', {
       'line_items[0][price]': price.id,
       'line_items[0][quantity]': '1',
       'restrictions[completed_sessions][limit]': '1',
       'shipping_address_collection[allowed_countries][0]': 'US',
       'metadata[artwork_id]': artworkId,
-    }, `water-ink-link-${stableId}`);
+    }, `water-ink-link-${requestId}`);
     return json({
       checkoutUrl: paymentLink.url,
       stripeProductId: product.id,

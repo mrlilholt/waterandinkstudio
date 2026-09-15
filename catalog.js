@@ -12,6 +12,9 @@ if (config?.url && config?.anonKey) {
     const legacyLinksResponse = await fetch(`${config.url}/rest/v1/legacy_artwork_links?select=legacy_number,stripe_payment_url`, {
       headers,
     });
+    const legacySettingsResponse = await fetch(`${config.url}/rest/v1/legacy_artwork_settings?select=legacy_number,price_cents,availability`, {
+      headers,
+    });
     if (!response.ok) throw new Error('The studio catalog could not be loaded.');
     const artworks = await response.json();
     const withImageUrls = artworks.map((artwork) => ({
@@ -21,6 +24,9 @@ if (config?.url && config?.anonKey) {
     window.dispatchEvent(new CustomEvent('studio-artworks-ready', { detail: withImageUrls }));
     if (legacyLinksResponse.ok) {
       window.dispatchEvent(new CustomEvent('legacy-store-links-ready', { detail: await legacyLinksResponse.json() }));
+    }
+    if (legacySettingsResponse.ok) {
+      window.dispatchEvent(new CustomEvent('legacy-artwork-settings-ready', { detail: await legacySettingsResponse.json() }));
     }
   } catch (error) {
     console.warn(error.message);

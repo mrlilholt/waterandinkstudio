@@ -38,18 +38,25 @@ if (!config?.url || !config?.anonKey) {
       setStatus(storeStatus, 'Catalog data is still loading. Please refresh this page.', 'error');
       return;
     }
-    const { data: links, error } = await supabase
-      .from('legacy_artwork_links')
-      .select('legacy_number');
-    if (error) {
+    const [{ data: links, error: linksError }, { data: settings, error: settingsError }] = await Promise.all([
+      supabase.from('legacy_artwork_links').select('legacy_number'),
+      supabase.from('legacy_artwork_settings').select('legacy_number,price_cents,availability'),
+    ]);
+    if (linksError || settingsError) {
       setStatus(storeStatus, 'The store-links database table is not ready yet. Run the new Supabase migration first.', 'error');
       return;
     }
     const linkedNumbers = new Set((links || []).map((link) => String(link.legacy_number)));
-    pendingWorks = works.filter((work) => (
+    const settingsByNumber = Object.fromEntries((settings || []).map((setting) => [setting.legacy_number, setting]));
+    pendingWorks = works.map((work) => ({
+      ...work,
+      priceCents: settingsByNumber[String(work.number)]?.price_cents ?? work.priceCents,
+      availability: settingsByNumber[String(work.number)]?.availability ?? work.availability,
+    })).filter((work) => (
       !etsyNumbers.has(work.number)
       && Number.isInteger(work.priceCents)
       && work.priceCents > 0
+      && work.availability !== 'sold'
       && !linkedNumbers.has(String(work.number))
     ));
     const linkedCount = linkedNumbers.size;

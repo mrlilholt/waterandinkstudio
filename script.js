@@ -20,6 +20,7 @@ const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
 let baseCollectionWorks = [];
 let publishedRemoteWorks = [];
 let legacyCheckoutByNumber = {};
+let legacySettingsByNumber = {};
 const newArrivals = [
   { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
   { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
@@ -63,7 +64,9 @@ const renderCollectionWorks = (grid, works) => {
 };
 const withLegacyCheckouts = (works) => works.map((work) => ({
   ...work,
-  checkoutUrl: work.availability === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
+  priceCents: legacySettingsByNumber[work.number]?.price_cents ?? work.priceCents,
+  availability: legacySettingsByNumber[work.number]?.availability ?? work.availability ?? 'available',
+  checkoutUrl: (legacySettingsByNumber[work.number]?.availability ?? work.availability) === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
 }));
 const renderArtworkCatalog = () => {
   const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
@@ -200,6 +203,11 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
 
 window.addEventListener('legacy-store-links-ready', ({ detail: links }) => {
   legacyCheckoutByNumber = Object.fromEntries(links.map((link) => [link.legacy_number, link]));
+  renderArtworkCatalog();
+});
+
+window.addEventListener('legacy-artwork-settings-ready', ({ detail: settings }) => {
+  legacySettingsByNumber = Object.fromEntries(settings.map((setting) => [setting.legacy_number, setting]));
   renderArtworkCatalog();
 });
 
