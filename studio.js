@@ -92,16 +92,10 @@ if (!config?.url || !config?.anonKey) {
   };
 
   const makeCatalogItem = (artwork) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.dataset.artworkId = artwork.id;
-    const title = document.createElement('strong');
-    title.textContent = artwork.title;
-    const detail = document.createElement('span');
-    detail.textContent = `${artwork.source === 'legacy' ? 'Existing' : 'Studio'} · $${((artwork.price_cents || 0) / 100).toFixed(2)}`;
-    button.append(title, detail);
-    button.addEventListener('click', () => openEditor(artwork));
-    return button;
+    const option = document.createElement('option');
+    option.value = `${artwork.source}:${artwork.id}`;
+    option.textContent = `${artwork.title} — $${((artwork.price_cents || 0) / 100).toFixed(2)}`;
+    return option;
   };
 
   const openEditor = (artwork) => {
@@ -128,9 +122,16 @@ if (!config?.url || !config?.anonKey) {
       supabase.from('legacy_artwork_links').select('legacy_number,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
       supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
-    if (uploadedResponse.error || linksResponse.error || settingsResponse.error) return;
-    const linksByNumber = Object.fromEntries(linksResponse.data.map((link) => [link.legacy_number, link]));
-    const settingsByNumber = Object.fromEntries(settingsResponse.data.map((setting) => [setting.legacy_number, setting]));
+    if (uploadedResponse.error) return setStatus(authStatus, uploadedResponse.error.message, 'error');
+    // The list deliberately falls back to the site catalog while the optional
+    // editor migration is awaiting its first run.
+    let settings = settingsResponse.data || [];
+    if (settingsResponse.error) {
+      const { data: basicSettings } = await supabase.from('legacy_artwork_settings').select('legacy_number,price_cents,availability');
+      settings = basicSettings || [];
+    }
+    const linksByNumber = Object.fromEntries((linksResponse.data || []).map((link) => [link.legacy_number, link]));
+    const settingsByNumber = Object.fromEntries(settings.map((setting) => [setting.legacy_number, setting]));
     const catalogWorks = catalogSource.contentWindow.WATER_AND_INK_STATIC_ARTWORKS.map((work) => {
       const setting = settingsByNumber[String(work.number)] || {};
       const link = linksByNumber[String(work.number)] || {};
@@ -147,7 +148,18 @@ if (!config?.url || !config?.anonKey) {
     }));
     catalogItems = [...uploadedWorks, ...catalogWorks];
     artworkList.replaceChildren(...catalogItems.map(makeCatalogItem));
+    if (catalogItems.length) {
+      const current = selectedArtwork && `${selectedArtwork.source}:${selectedArtwork.id}`;
+      const next = catalogItems.find((artwork) => `${artwork.source}:${artwork.id}` === current) || catalogItems[0];
+      artworkList.value = `${next.source}:${next.id}`;
+      openEditor(next);
+    }
   }
+
+  artworkList.addEventListener('change', () => {
+    const artwork = catalogItems.find((item) => `${item.source}:${item.id}` === artworkList.value);
+    if (artwork) openEditor(artwork);
+  });
 
   catalogEditor.addEventListener('submit', async (event) => {
     event.preventDefault();
