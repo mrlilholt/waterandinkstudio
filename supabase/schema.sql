@@ -13,6 +13,7 @@ create table if not exists public.artworks (
   stripe_payment_url text,
   stripe_product_id text,
   stripe_payment_link_id text,
+  additional_image_paths jsonb not null default '[]'::jsonb,
   new_arrival boolean not null default true,
   is_published boolean not null default true,
   created_at timestamptz not null default now()
@@ -75,6 +76,7 @@ create table if not exists public.legacy_artwork_settings (
   etsy_url text,
   is_published boolean,
   new_arrival boolean,
+  additional_images jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
 

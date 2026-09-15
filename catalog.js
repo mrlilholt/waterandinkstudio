@@ -12,7 +12,7 @@ if (config?.url && config?.anonKey) {
     const legacyLinksResponse = await fetch(`${config.url}/rest/v1/legacy_artwork_links?select=legacy_number,stripe_payment_url`, {
       headers,
     });
-    const legacySettingsResponse = await fetch(`${config.url}/rest/v1/legacy_artwork_settings?select=legacy_number,title,description,image_url,price_cents,availability,etsy_url,is_published,new_arrival`, {
+    const legacySettingsResponse = await fetch(`${config.url}/rest/v1/legacy_artwork_settings?select=legacy_number,title,description,image_url,additional_images,price_cents,availability,etsy_url,is_published,new_arrival`, {
       headers,
     });
     if (!response.ok) throw new Error('The studio catalog could not be loaded.');
@@ -20,6 +20,7 @@ if (config?.url && config?.anonKey) {
     const withImageUrls = artworks.map((artwork) => ({
       ...artwork,
       imageUrl: `${config.url}/storage/v1/object/public/artwork-images/${artwork.image_path}`,
+      additionalImages: (artwork.additional_image_paths || []).map((path) => `${config.url}/storage/v1/object/public/artwork-images/${path}`),
     }));
     window.dispatchEvent(new CustomEvent('studio-artworks-ready', { detail: withImageUrls }));
     if (legacyLinksResponse.ok) {
