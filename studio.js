@@ -15,12 +15,12 @@ const setStatus = (element, message, type = '') => {
 };
 
 const priceDefaults = {
-  '8.5 × 11 in': 35,
-  'Approx. 18 × 18 in': 48,
-  '18 × 36 in (3 ft banner)': 125,
-  '18 × 48 in (4 ft banner)': 200,
-  '18 × 60 in (5 ft banner)': 250,
-  '18 × 72 in (6 ft banner)': 300,
+  '8.5 × 11 in': 42,
+  'Approx. 18 × 18 in': 55,
+  '18 × 36 in (3 ft banner)': 132,
+  '18 × 48 in (4 ft banner)': 207,
+  '18 × 60 in (5 ft banner)': 257,
+  '18 × 72 in (6 ft banner)': 307,
 };
 
 if (!config?.url || !config?.anonKey) {

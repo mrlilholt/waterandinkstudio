@@ -21,13 +21,13 @@ let baseCollectionWorks = [];
 let publishedRemoteWorks = [];
 let legacyCheckoutByNumber = {};
 const newArrivals = [
-  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15000 },
-  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
+  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15700 },
+  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 13200 },
 ];
 const etsyOriginals = new Set([4, 77, 95, 109, 117]);
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -111,29 +111,29 @@ const workTitles = {
   116: 'Cradled Log No. 001',
 };
 const staticArtworkUpdates = {
-  15: { priceCents: 12500 },
-  23: { priceCents: 4800 },
-  24: { priceCents: 4800 },
-  40: { priceCents: 12500 },
-  49: { priceCents: 4800 },
-  52: { priceCents: 7500 },
-  60: { priceCents: 12500 },
-  63: { priceCents: 12500 },
-  64: { priceCents: 12500 },
-  65: { priceCents: 4800 },
-  73: { priceCents: 12500 },
-  74: { priceCents: 12500 },
-  77: { priceCents: 12500 },
-  85: { priceCents: 12500 },
-  100: { description: '18 × 36 in (3 ft banner)', priceCents: 17500 },
-  103: { priceCents: 12500 },
-  117: { priceCents: 12500 },
+  15: { priceCents: 13200 },
+  23: { priceCents: 5500 },
+  24: { priceCents: 5500 },
+  40: { priceCents: 13200 },
+  49: { priceCents: 5500 },
+  52: { priceCents: 8200 },
+  60: { priceCents: 13200 },
+  63: { priceCents: 13200 },
+  64: { priceCents: 13200 },
+  65: { priceCents: 5500 },
+  73: { priceCents: 13200 },
+  74: { priceCents: 13200 },
+  77: { priceCents: 13200 },
+  85: { priceCents: 13200 },
+  100: { description: '18 × 36 in (3 ft banner)', priceCents: 18200 },
+  103: { priceCents: 13200 },
+  117: { priceCents: 13200 },
   118: { availability: 'sold' },
-  120: { priceCents: 4800 },
-  122: { priceCents: 7500 },
-  124: { priceCents: 4800 },
-  127: { priceCents: 4800 },
-  128: { priceCents: 4800 },
+  120: { priceCents: 5500 },
+  122: { priceCents: 8200 },
+  124: { priceCents: 5500 },
+  127: { priceCents: 5500 },
+  128: { priceCents: 5500 },
 };
 const portraitOriginals = new Set([
   1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -142,9 +142,9 @@ const portraitOriginals = new Set([
 ]);
 const bannerOriginals = new Set([14, 30, 57, 61, 62]);
 const guessedArtworkPricing = (number) => {
-  if (bannerOriginals.has(number)) return { description: '18 × 36 in (3 ft banner)', priceCents: 12500 };
-  if (portraitOriginals.has(number)) return { description: '8.5 × 11 in', priceCents: 3500 };
-  return { description: 'Approx. 18 × 18 in', priceCents: 4800 };
+  if (bannerOriginals.has(number)) return { description: '18 × 36 in (3 ft banner)', priceCents: 13200 };
+  if (portraitOriginals.has(number)) return { description: '8.5 × 11 in', priceCents: 4200 };
+  return { description: 'Approx. 18 × 18 in', priceCents: 5500 };
 };
 
 if (collectionGrid) {
