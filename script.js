@@ -58,7 +58,7 @@ const renderCollectionWorks = (grid, works) => {
       <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-images="${safeImages}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" data-checkout-url="${safeCheckoutUrl}" aria-label="View larger image of ${safeTitle}">
         <img src="${safeImage}" alt="${safeTitle} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
       </button>
-      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${purchaseActions}</div>
+      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''} · Free US shipping · Artwork only, unframed</p>${purchaseActions}</div>
     </article>
   `;
   }).join('');

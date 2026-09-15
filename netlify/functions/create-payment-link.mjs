@@ -55,7 +55,7 @@ export default async (request) => {
     }
     const product = stripeProductId ? { id: stripeProductId } : await stripeRequest('products', {
       name: title,
-      description: description || 'One-of-one original artwork from Water & Ink Studio.',
+      description: `${description || 'One-of-one original artwork from Water & Ink Studio.'} Artwork only; unframed. Free US shipping.`,
       'images[0]': imageUrl,
       'metadata[artwork_id]': artworkId,
     }, `water-ink-product-${stableId}`);
