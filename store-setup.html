@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Store Setup — Water &amp; Ink Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=6" />
+  </head>
+  <body>
+    <main class="studio-page">
+      <div class="studio-shell">
+        <header class="studio-header">
+          <a class="wordmark" href="index.html" aria-label="Return to Water and Ink Studio"><span class="jp" lang="ja">みずとすみ</span><span>WATER &amp; INK<br />STUDIO</span></a>
+          <div class="studio-header-actions"><a class="studio-signout" href="studio.html">Studio uploads</a><button class="studio-signout" id="sign-out" type="button" hidden>Sign out</button></div>
+        </header>
+        <section class="studio-panel" id="auth-panel">
+          <p class="eyebrow">Private store</p>
+          <h1>Set up<br /><em>checkout.</em></h1>
+          <p>Sign in with the Google account connected to Water &amp; Ink Studio.</p>
+          <button class="button button-dark" id="google-sign-in" type="button">Continue with Google <span>↗</span></button>
+          <p class="studio-status" id="auth-status" role="status"></p>
+        </section>
+        <section class="studio-panel" id="store-panel" hidden>
+          <p class="eyebrow">Existing catalog</p>
+          <h2>Give originals a checkout</h2>
+          <p id="store-summary">Loading the catalog…</p>
+          <p class="store-note">Your five Etsy-featured works will remain Etsy links. This creates one Stripe product and a one-time payment link for every other priced original still missing one. It does not run until you press the button below.</p>
+          <button class="button button-dark" id="generate-links" type="button" disabled>Generate Stripe checkout links <span>↗</span></button>
+          <p class="studio-status" id="store-status" role="status"></p>
+        </section>
+      </div>
+    </main>
+    <iframe id="catalog-source" src="index.html" title="Catalog data" hidden></iframe>
+    <script src="supabase-config.js"></script>
+    <script type="module" src="store-setup.js"></script>
+  </body>
+</html>

@@ -28,6 +28,7 @@
 .collection-work button { appearance:none; background:transparent; border:0; color:inherit; cursor:pointer; display:block; font:inherit; padding:0; text-align:left; width:100%; }
 .artwork-preview { overflow:hidden; }
 .collection-work .collection-shop-link,.collection-work .inquiry-trigger { color:var(--moss); font:500 .67rem "DM Mono",monospace; letter-spacing:.08em; margin-top:.8rem; text-transform:uppercase; width:auto; }
+.collection-work .collection-shop-link + .inquiry-trigger { margin-left:.9rem; }
 .collection-work .inquiry-trigger { border-bottom:1px solid var(--moss); padding-bottom:.25rem; }
 .collection-work-featured { border-top:2px solid var(--red); padding-top:.55rem; }
 .collection-work img { aspect-ratio:.78; background:#e9e4dc; display:block; filter:saturate(.86); object-fit:cover; transition:transform .45s ease,filter .45s ease; width:100%; }
@@ -53,6 +54,8 @@
 .artwork-dialog-copy h2 { font:400 clamp(2.3rem,4.5vw,4.4rem)/.92 Fraunces,Georgia,serif; letter-spacing:-.06em; margin:0; }
 .artwork-dialog-copy > p:not(.eyebrow) { font-size:.95rem; line-height:1.75; margin:1.5rem 0; }
 .artwork-dialog-copy .artwork-preview-price { font:500 .8rem "DM Mono",monospace; letter-spacing:.07em; text-transform:uppercase; }
+.artwork-dialog-actions { align-items:center; display:flex; flex-wrap:wrap; gap:.7rem; }
+.artwork-dialog-actions .button-light { background:transparent; border:1px solid var(--ink); color:var(--ink); cursor:pointer; }
 @media (max-width:760px) { .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:2rem .7rem; }.collection-work:nth-child(5n + 1) img,.collection-work:nth-child(7n + 3) img { aspect-ratio:.78; } }
 @media (max-width:760px) { .artwork-dialog-grid { display:block; max-height:90vh; overflow:auto; }.artwork-dialog-grid img { height:auto; max-height:60vh; }.artwork-dialog-copy { padding:2rem 1.4rem; } }
 @media (max-width:760px) { .new-arrivals .collection-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.new-arrivals .collection-work img { aspect-ratio:.78; } }
@@ -70,6 +73,7 @@
 .studio-page { min-height:100vh; padding:6vw 4vw 10vw; }
 .studio-shell { margin:0 auto; max-width:880px; }
 .studio-header { align-items:center; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; margin-bottom:5vw; padding-bottom:1.3rem; }
+.studio-header-actions { align-items:center; display:flex; gap:1.2rem; }
 .studio-header h1 { font:400 clamp(2.7rem,6vw,5.5rem)/.9 Fraunces,Georgia,serif; letter-spacing:-.06em; margin:0; }
 .studio-panel { border:1px solid var(--line); padding:clamp(1.3rem,4vw,3rem); }
 .studio-panel h2 { font:400 clamp(2rem,4vw,3rem)/1 Fraunces,Georgia,serif; letter-spacing:-.05em; margin:0 0:1rem; }
@@ -88,5 +92,6 @@
 .studio-price-editor input { background:transparent; border:1px solid var(--line); color:var(--ink); font:400 1rem Fraunces,Georgia,serif; padding:.55rem; width:100%; }
 .studio-price-editor .button { padding:.65rem .8rem; white-space:nowrap; }
 .studio-signout { background:transparent; border:0; border-bottom:1px solid var(--ink); color:var(--ink); cursor:pointer; font:11px "DM Mono",monospace; padding:0 0 5px; text-transform:uppercase; }
+.store-note { color:var(--moss); font-size:.86rem; line-height:1.65; max-width:650px; }
 @media (max-width:760px) { .studio-page { padding:10vw 6vw; }.studio-header { align-items:flex-start; flex-direction:column; gap:1.25rem; }.studio-panel { padding:1.4rem; } }
 @media (max-width:760px) { .studio-price-editor { align-items:start; grid-template-columns:1fr 1fr; }.studio-price-editor strong { grid-column:span 2; }.studio-price-editor .button { justify-content:center; } }

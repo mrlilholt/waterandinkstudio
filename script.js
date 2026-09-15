@@ -18,6 +18,8 @@ document.querySelector('#year').textContent = new Date().getFullYear();
 const collectionGrid = document.querySelector('#collection-grid');
 const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
 let baseCollectionWorks = [];
+let publishedRemoteWorks = [];
+let legacyCheckoutByNumber = {};
 const newArrivals = [
   { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
   { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
@@ -35,24 +37,35 @@ const formatPrice = (priceCents) => Number.isInteger(priceCents) ? `$${(priceCen
 
 const renderCollectionWorks = (grid, works) => {
   if (!grid) return;
-  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null }, index) => {
-    const isEtsyWork = etsyOriginals.has(number);
+  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null, checkoutUrl = '', etsyUrl = '' }, index) => {
+    const isEtsyWork = Boolean(etsyUrl) || etsyOriginals.has(number);
     const safeTitle = escapeHtml(title);
     const safeDescription = escapeHtml(description);
     const safeImage = escapeHtml(image);
+    const safeCheckoutUrl = escapeHtml(checkoutUrl);
+    const safeEtsyUrl = escapeHtml(etsyUrl || 'https://www.etsy.com/shop/WATERandINKSTUDIOArt');
     const price = formatPrice(priceCents);
-    const action = isEtsyWork
-      ? `<a class="collection-shop-link" href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
-      : `<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
+    const purchaseActions = isEtsyWork
+      ? `<a class="collection-shop-link" href="${safeEtsyUrl}" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
+      : `${safeCheckoutUrl ? `<a class="collection-shop-link collection-buy-link" href="${safeCheckoutUrl}" target="_blank" rel="noreferrer">Buy now ↗</a>` : ''}<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
     return `
     <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
-      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" aria-label="View larger image of ${safeTitle}">
+      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" data-checkout-url="${safeCheckoutUrl}" aria-label="View larger image of ${safeTitle}">
         <img src="${safeImage}" alt="${safeTitle} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
       </button>
-      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${action}</div>
+      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${purchaseActions}</div>
     </article>
   `;
   }).join('');
+};
+const withLegacyCheckouts = (works) => works.map((work) => ({
+  ...work,
+  checkoutUrl: legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || '',
+}));
+const renderArtworkCatalog = () => {
+  const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
+  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...withLegacyCheckouts(newArrivals)]);
+  renderCollectionWorks(collectionGrid, [...publishedRemoteWorks, ...withLegacyCheckouts(newArrivals), ...withLegacyCheckouts(baseCollectionWorks)]);
 };
 const workTitles = {
   4: 'Rising Water No. 001', 6: 'Stone Watchtower No. 001', 7: 'Cliff Walker No. 001',
@@ -140,23 +153,29 @@ if (collectionGrid) {
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
   baseCollectionWorks = collectionWorks;
-  renderCollectionWorks(collectionGrid, [...newArrivals, ...baseCollectionWorks]);
+  // Used by the owner-only store setup page to create checkout links for the
+  // existing catalog. This is public catalog information, never credentials.
+  window.WATER_AND_INK_STATIC_ARTWORKS = [...newArrivals, ...baseCollectionWorks];
+  renderArtworkCatalog();
 }
-
-renderCollectionWorks(newArrivalsGrid, newArrivals);
 
 window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
   if (!Array.isArray(artworks)) return;
-  const publishedWorks = artworks.map((artwork) => ({
+  publishedRemoteWorks = artworks.map((artwork) => ({
     number: artwork.id,
     title: artwork.title,
     image: artwork.imageUrl,
     description: artwork.description,
     priceCents: artwork.price_cents,
+    checkoutUrl: artwork.stripe_payment_url,
+    etsyUrl: artwork.etsy_url,
   }));
-  const remoteNewArrivals = publishedWorks.filter((_, index) => artworks[index].new_arrival);
-  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...newArrivals]);
-  renderCollectionWorks(collectionGrid, [...publishedWorks, ...newArrivals, ...baseCollectionWorks]);
+  renderArtworkCatalog();
+});
+
+window.addEventListener('legacy-store-links-ready', ({ detail: links }) => {
+  legacyCheckoutByNumber = Object.fromEntries(links.map((link) => [link.legacy_number, link]));
+  renderArtworkCatalog();
 });
 
 const inquiryDialog = document.querySelector('#inquiry-dialog');
@@ -177,13 +196,16 @@ document.addEventListener('click', (event) => {
   }
   const preview = event.target.closest('.artwork-preview');
   if (!preview) return;
-  const { artworkTitle, artworkImage, artworkDescription, artworkPrice } = preview.dataset;
+  const { artworkTitle, artworkImage, artworkDescription, artworkPrice, checkoutUrl } = preview.dataset;
   artworkDialog.querySelector('#artwork-preview-image').src = artworkImage;
   artworkDialog.querySelector('#artwork-preview-image').alt = artworkTitle;
   artworkDialog.querySelector('#artwork-preview-title').textContent = artworkTitle;
   artworkDialog.querySelector('#artwork-preview-description').textContent = artworkDescription;
   artworkDialog.querySelector('#artwork-preview-price').textContent = artworkPrice;
   artworkDialog.querySelector('#artwork-preview-inquiry').dataset.artworkTitle = artworkTitle;
+  const buyButton = artworkDialog.querySelector('#artwork-preview-buy');
+  buyButton.href = checkoutUrl || '#';
+  buyButton.hidden = !checkoutUrl;
   artworkDialog.showModal();
 });
 

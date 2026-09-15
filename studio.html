@@ -15,7 +15,7 @@
       <div class="studio-shell">
         <header class="studio-header">
           <a class="wordmark" href="index.html" aria-label="Return to Water and Ink Studio"><span class="jp" lang="ja">みずとすみ</span><span>WATER &amp; INK<br />STUDIO</span></a>
-          <button class="studio-signout" id="sign-out" type="button" hidden>Sign out</button>
+          <div class="studio-header-actions"><a class="studio-signout" href="store-setup.html">Set up store</a><button class="studio-signout" id="sign-out" type="button" hidden>Sign out</button></div>
         </header>
         <section class="studio-panel" id="auth-panel">
           <p class="eyebrow">Private studio</p>
@@ -44,6 +44,7 @@
             <label>Price (USD) <input name="price" id="artwork-price" type="number" min="0" step="0.01" value="35.00" required /></label>
             <label>Availability <select name="availability"><option value="available">Available</option><option value="sold">Sold</option><option value="inquiry">Purchase inquiry</option></select></label>
             <label>Shop link <input name="etsy_url" type="url" placeholder="Optional Etsy listing URL" /></label>
+            <label>Stripe Payment Link <input name="stripe_payment_url" type="url" placeholder="Created automatically if left blank" /></label>
             <label class="checkbox"><input name="new_arrival" type="checkbox" checked /> New Arrival</label>
             <label class="checkbox"><input name="is_published" type="checkbox" checked /> Publish now</label>
             <button class="button button-dark" type="submit">Publish artwork <span>↗</span></button>
