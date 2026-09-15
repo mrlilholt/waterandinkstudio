@@ -15,12 +15,12 @@ const setStatus = (element, message, type = '') => {
 };
 
 const priceDefaults = {
-  '8.5 × 11 in': 35,
-  'Approx. 18 × 18 in': 48,
-  '18 × 36 in (3 ft banner)': 125,
-  '18 × 48 in (4 ft banner)': 200,
-  '18 × 60 in (5 ft banner)': 250,
-  '18 × 72 in (6 ft banner)': 300,
+  '8.5 × 11 in': 42,
+  'Approx. 18 × 18 in': 55,
+  '18 × 36 in (3 ft banner)': 132,
+  '18 × 48 in (4 ft banner)': 207,
+  '18 × 60 in (5 ft banner)': 257,
+  '18 × 72 in (6 ft banner)': 307,
 };
 
 if (!config?.url || !config?.anonKey) {
@@ -111,13 +111,38 @@ if (!config?.url || !config?.anonKey) {
     });
     if (uploadError) return setStatus(uploadStatus, uploadError.message, 'error');
 
+    let stripePaymentUrl = data.get('stripe_payment_url').trim() || null;
+    const etsyUrl = data.get('etsy_url').trim() || null;
+    if (!stripePaymentUrl && !etsyUrl && data.get('is_published') === 'on') {
+      setStatus(uploadStatus, 'Creating one-of-one Stripe checkout…');
+      const { data: { session } } = await supabase.auth.getSession();
+      const imageUrl = `${config.url}/storage/v1/object/public/artwork-images/${path}`;
+      const checkoutResponse = await fetch('/api/create-payment-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session?.access_token || ''}`,
+        },
+        body: JSON.stringify({
+          title: data.get('title').trim(),
+          description: data.get('description').trim(),
+          imageUrl,
+          priceCents: Math.round(Number(data.get('price')) * 100),
+        }),
+      });
+      const checkout = await checkoutResponse.json();
+      if (!checkoutResponse.ok) return setStatus(uploadStatus, checkout.error || 'Stripe checkout could not be created.', 'error');
+      stripePaymentUrl = checkout.checkoutUrl;
+    }
+
     const { error: artworkError } = await supabase.from('artworks').insert({
       title: data.get('title').trim(),
       description: data.get('description').trim() || null,
       size_option: data.get('size_option'),
       price_cents: Math.round(Number(data.get('price')) * 100),
       availability: data.get('availability'),
-      etsy_url: data.get('etsy_url').trim() || null,
+      etsy_url: etsyUrl,
+      stripe_payment_url: stripePaymentUrl,
       image_path: path,
       new_arrival: data.get('new_arrival') === 'on',
       is_published: data.get('is_published') === 'on',

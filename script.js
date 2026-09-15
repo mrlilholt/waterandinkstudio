@@ -18,14 +18,16 @@ document.querySelector('#year').textContent = new Date().getFullYear();
 const collectionGrid = document.querySelector('#collection-grid');
 const newArrivalsGrid = document.querySelector('#new-arrivals-grid');
 let baseCollectionWorks = [];
+let publishedRemoteWorks = [];
+let legacyCheckoutByNumber = {};
 const newArrivals = [
-  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20000 },
-  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15000 },
-  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
+  { number: 131, title: 'Large Winter Tree No. 001', image: 'assets/new-arrivals/large-winter-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 132, title: 'Large Tree No. 001', image: 'assets/new-arrivals/large-tree-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 133, title: 'Long Bird No. 001', image: 'assets/new-arrivals/long-bird-001.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 134, title: 'Large Tree No. 002', image: 'assets/new-arrivals/large-tree-002.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 135, title: 'Large Tree No. 003', image: 'assets/new-arrivals/large-tree-003.png', description: '18 × 48 in (4 ft banner)', priceCents: 20700 },
+  { number: 136, title: 'Study On Stillness 4 Panels (recycled paper - large)', image: 'assets/new-arrivals/study-on-stillness-4-panels.png', description: 'Approx. 12 × 14 in each · four-panel set', priceCents: 15700 },
+  { number: 137, title: 'Growth Enso (recycled paper - large)', image: 'assets/new-arrivals/growth-enso.png', description: '18 × 36 in (3 ft banner)', priceCents: 13200 },
 ];
 const etsyOriginals = new Set([4, 77, 95, 109, 117]);
 const escapeHtml = (value = '') => String(value).replace(/[&<>'"]/g, (character) => ({
@@ -35,24 +37,38 @@ const formatPrice = (priceCents) => Number.isInteger(priceCents) ? `$${(priceCen
 
 const renderCollectionWorks = (grid, works) => {
   if (!grid) return;
-  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null }, index) => {
-    const isEtsyWork = etsyOriginals.has(number);
+  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null, checkoutUrl = '', etsyUrl = '', availability = 'available' }, index) => {
+    const isEtsyWork = Boolean(etsyUrl) || etsyOriginals.has(number);
+    const isSold = availability === 'sold';
     const safeTitle = escapeHtml(title);
     const safeDescription = escapeHtml(description);
     const safeImage = escapeHtml(image);
+    const safeCheckoutUrl = escapeHtml(checkoutUrl);
+    const safeEtsyUrl = escapeHtml(etsyUrl || 'https://www.etsy.com/shop/WATERandINKSTUDIOArt');
     const price = formatPrice(priceCents);
-    const action = isEtsyWork
-      ? `<a class="collection-shop-link" href="https://www.etsy.com/shop/WATERandINKSTUDIOArt" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
-      : `<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
+    const purchaseActions = isSold
+      ? '<span class="collection-sold">Sold</span>'
+      : isEtsyWork
+      ? `<a class="collection-shop-link" href="${safeEtsyUrl}" target="_blank" rel="noreferrer">Featured on Etsy ↗</a>`
+      : `${safeCheckoutUrl ? `<a class="collection-shop-link collection-buy-link" href="${safeCheckoutUrl}" target="_blank" rel="noreferrer">Buy now ↗</a>` : ''}<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
     return `
     <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
-      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" aria-label="View larger image of ${safeTitle}">
+      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" data-checkout-url="${safeCheckoutUrl}" aria-label="View larger image of ${safeTitle}">
         <img src="${safeImage}" alt="${safeTitle} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
       </button>
-      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${action}</div>
+      <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${purchaseActions}</div>
     </article>
   `;
   }).join('');
+};
+const withLegacyCheckouts = (works) => works.map((work) => ({
+  ...work,
+  checkoutUrl: work.availability === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
+}));
+const renderArtworkCatalog = () => {
+  const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
+  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...withLegacyCheckouts(newArrivals)]);
+  renderCollectionWorks(collectionGrid, [...publishedRemoteWorks, ...withLegacyCheckouts(newArrivals), ...withLegacyCheckouts(baseCollectionWorks)]);
 };
 const workTitles = {
   4: 'Rising Water No. 001', 6: 'Stone Watchtower No. 001', 7: 'Cliff Walker No. 001',
@@ -95,7 +111,29 @@ const workTitles = {
   116: 'Cradled Log No. 001',
 };
 const staticArtworkUpdates = {
-  100: { description: '18 × 36 in (3 ft banner)', priceCents: 12500 },
+  15: { priceCents: 13200 },
+  23: { priceCents: 5500 },
+  24: { priceCents: 5500 },
+  40: { priceCents: 13200 },
+  49: { priceCents: 5500 },
+  52: { priceCents: 8200 },
+  60: { priceCents: 13200 },
+  63: { priceCents: 13200 },
+  64: { priceCents: 13200 },
+  65: { priceCents: 5500 },
+  73: { priceCents: 13200 },
+  74: { priceCents: 13200 },
+  77: { priceCents: 13200 },
+  85: { priceCents: 13200 },
+  100: { description: '18 × 36 in (3 ft banner)', priceCents: 18200 },
+  103: { priceCents: 13200 },
+  117: { priceCents: 13200 },
+  118: { availability: 'sold' },
+  120: { priceCents: 5500 },
+  122: { priceCents: 8200 },
+  124: { priceCents: 5500 },
+  127: { priceCents: 5500 },
+  128: { priceCents: 5500 },
 };
 const portraitOriginals = new Set([
   1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
@@ -104,9 +142,9 @@ const portraitOriginals = new Set([
 ]);
 const bannerOriginals = new Set([14, 30, 57, 61, 62]);
 const guessedArtworkPricing = (number) => {
-  if (bannerOriginals.has(number)) return { description: '18 × 36 in (3 ft banner)', priceCents: 12500 };
-  if (portraitOriginals.has(number)) return { description: '8.5 × 11 in', priceCents: 3500 };
-  return { description: 'Approx. 18 × 18 in', priceCents: 4800 };
+  if (bannerOriginals.has(number)) return { description: '18 × 36 in (3 ft banner)', priceCents: 13200 };
+  if (portraitOriginals.has(number)) return { description: '8.5 × 11 in', priceCents: 4200 };
+  return { description: 'Approx. 18 × 18 in', priceCents: 5500 };
 };
 
 if (collectionGrid) {
@@ -128,7 +166,7 @@ if (collectionGrid) {
     130: { title: 'Enso No. 15 “Growth”', image: 'assets/collection/enso-015-growth.png' },
   };
 
-  const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106]);
+  const excludedOriginals = new Set([1, 2, 3, 5, 27, 34, 66, 76, 86, 96, 106, 129, 130]);
   const collectionWorks = Array.from({ length: 130 }, (_, index) => index + 1)
     .filter((number) => !excludedOriginals.has(number))
     .map((number) => {
@@ -140,23 +178,29 @@ if (collectionGrid) {
     .sort((a, b) => Number(etsyOriginals.has(b.number)) - Number(etsyOriginals.has(a.number)));
 
   baseCollectionWorks = collectionWorks;
-  renderCollectionWorks(collectionGrid, [...newArrivals, ...baseCollectionWorks]);
+  // Used by the owner-only store setup page to create checkout links for the
+  // existing catalog. This is public catalog information, never credentials.
+  window.WATER_AND_INK_STATIC_ARTWORKS = [...newArrivals, ...baseCollectionWorks];
+  renderArtworkCatalog();
 }
-
-renderCollectionWorks(newArrivalsGrid, newArrivals);
 
 window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
   if (!Array.isArray(artworks)) return;
-  const publishedWorks = artworks.map((artwork) => ({
+  publishedRemoteWorks = artworks.map((artwork) => ({
     number: artwork.id,
     title: artwork.title,
     image: artwork.imageUrl,
     description: artwork.description,
     priceCents: artwork.price_cents,
+    checkoutUrl: artwork.stripe_payment_url,
+    etsyUrl: artwork.etsy_url,
   }));
-  const remoteNewArrivals = publishedWorks.filter((_, index) => artworks[index].new_arrival);
-  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...newArrivals]);
-  renderCollectionWorks(collectionGrid, [...publishedWorks, ...newArrivals, ...baseCollectionWorks]);
+  renderArtworkCatalog();
+});
+
+window.addEventListener('legacy-store-links-ready', ({ detail: links }) => {
+  legacyCheckoutByNumber = Object.fromEntries(links.map((link) => [link.legacy_number, link]));
+  renderArtworkCatalog();
 });
 
 const inquiryDialog = document.querySelector('#inquiry-dialog');
@@ -177,13 +221,16 @@ document.addEventListener('click', (event) => {
   }
   const preview = event.target.closest('.artwork-preview');
   if (!preview) return;
-  const { artworkTitle, artworkImage, artworkDescription, artworkPrice } = preview.dataset;
+  const { artworkTitle, artworkImage, artworkDescription, artworkPrice, checkoutUrl } = preview.dataset;
   artworkDialog.querySelector('#artwork-preview-image').src = artworkImage;
   artworkDialog.querySelector('#artwork-preview-image').alt = artworkTitle;
   artworkDialog.querySelector('#artwork-preview-title').textContent = artworkTitle;
   artworkDialog.querySelector('#artwork-preview-description').textContent = artworkDescription;
   artworkDialog.querySelector('#artwork-preview-price').textContent = artworkPrice;
   artworkDialog.querySelector('#artwork-preview-inquiry').dataset.artworkTitle = artworkTitle;
+  const buyButton = artworkDialog.querySelector('#artwork-preview-buy');
+  buyButton.href = checkoutUrl || '#';
+  buyButton.hidden = !checkoutUrl;
   artworkDialog.showModal();
 });
 
