@@ -96,6 +96,7 @@ if (!config?.url || !config?.anonKey) {
     generate.disabled = true;
     let created = 0;
     let failed = 0;
+    let firstFailure = '';
     const sourceUrl = window.location.origin;
     const { data: { session: activeSession } } = await supabase.auth.getSession();
     for (const work of pendingWorks) {
@@ -126,11 +127,12 @@ if (!config?.url || !config?.anonKey) {
         created += 1;
       } catch (error) {
         failed += 1;
+        firstFailure ||= error.message || 'Unknown error';
         console.error(`Checkout creation failed for ${work.title}`, error);
       }
     }
     setStatus(storeStatus, failed
-      ? `${created} links created. ${failed} did not complete; use the button again to retry only those.`
+      ? `${created} links created. ${failed} did not complete. First error: ${firstFailure}`
       : `${created} Stripe checkout links created. They are now live on the collection.`, failed ? 'error' : 'success');
     await loadStore();
   });

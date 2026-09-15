@@ -66,8 +66,15 @@ create policy "Studio owner manages legacy checkout links" on public.legacy_artw
 
 create table if not exists public.legacy_artwork_settings (
   legacy_number text primary key,
+  title text,
+  description text,
+  image_url text,
+  size_option text,
   price_cents integer check (price_cents is null or price_cents >= 0),
   availability text check (availability in ('available', 'sold', 'inquiry')),
+  etsy_url text,
+  is_published boolean,
+  new_arrival boolean,
   updated_at timestamptz not null default now()
 );
 

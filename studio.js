@@ -10,6 +10,10 @@ const uploadStatus = document.querySelector('#upload-status');
 const signOut = document.querySelector('#sign-out');
 const catalogSource = document.querySelector('#catalog-source');
 const etsyNumbers = new Set([4, 77, 95, 109, 117]);
+const catalogEditor = document.querySelector('#catalog-editor');
+const editorStatus = document.querySelector('#editor-status');
+let catalogItems = [];
+let selectedArtwork = null;
 
 const setStatus = (element, message, type = '') => {
   element.textContent = message;
@@ -66,17 +70,17 @@ if (!config?.url || !config?.anonKey) {
     catalogSource.addEventListener('load', resolve, { once: true });
   });
 
-  const replaceStripeCheckout = async (artwork, priceCents) => {
+  const replaceStripeCheckout = async (artwork, values) => {
     if (!artwork.stripe_payment_link_id || !artwork.stripe_product_id) return null;
     const { data: { session } } = await supabase.auth.getSession();
     const response = await fetch('/api/create-payment-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token || ''}` },
       body: JSON.stringify({
-        title: artwork.title,
-        description: artwork.description || artwork.size_option || 'Original artwork',
-        imageUrl: artwork.imageUrl,
-        priceCents,
+        title: values.title,
+        description: values.description || values.sizeOption || 'Original artwork',
+        imageUrl: values.imageUrl,
+        priceCents: values.priceCents,
         artworkId: artwork.source === 'legacy' ? `legacy-${artwork.id}` : `studio-${artwork.id}`,
         stripeProductId: artwork.stripe_product_id,
         previousPaymentLinkId: artwork.stripe_payment_link_id,
@@ -87,64 +91,34 @@ if (!config?.url || !config?.anonKey) {
     return checkout;
   };
 
-  const makePriceEditor = (artwork) => {
-    const form = document.createElement('form');
-    form.className = 'studio-price-editor';
+  const makeCatalogItem = (artwork) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.artworkId = artwork.id;
     const title = document.createElement('strong');
     title.textContent = artwork.title;
-    const size = document.createElement('span');
-    size.textContent = artwork.source === 'legacy'
-      ? (etsyNumbers.has(Number(artwork.id)) ? 'Etsy listing — update Etsy checkout separately' : artwork.size_option || 'Existing catalog')
-      : artwork.size_option || 'Custom size';
-    const price = document.createElement('input');
-    price.type = 'number';
-    price.min = '0';
-    price.step = '0.01';
-    price.value = ((artwork.price_cents ?? 0) / 100).toFixed(2);
-    price.setAttribute('aria-label', `Price for ${artwork.title}`);
-    const save = document.createElement('button');
-    save.className = 'button button-light';
-    save.type = 'submit';
-    save.textContent = 'Save price';
-    form.append(title, size, price, save);
-    form.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      save.textContent = 'Saving…';
-      const priceCents = Math.round(Number(price.value) * 100);
-      try {
-        const checkout = await replaceStripeCheckout(artwork, priceCents);
-        if (artwork.source === 'legacy') {
-          const { error: settingsError } = await supabase.from('legacy_artwork_settings').upsert({
-            legacy_number: String(artwork.id), price_cents: priceCents, availability: artwork.availability,
-          });
-          if (settingsError) throw settingsError;
-          if (checkout) {
-            const { error: linkError } = await supabase.from('legacy_artwork_links').update({
-              price_cents: priceCents,
-              stripe_payment_url: checkout.checkoutUrl,
-              stripe_product_id: checkout.stripeProductId,
-              stripe_payment_link_id: checkout.stripePaymentLinkId,
-            }).eq('legacy_number', String(artwork.id));
-            if (linkError) throw linkError;
-          }
-        } else {
-          const { error } = await supabase.from('artworks').update({
-            price_cents: priceCents,
-            ...(checkout ? {
-              stripe_payment_url: checkout.checkoutUrl,
-              stripe_product_id: checkout.stripeProductId,
-              stripe_payment_link_id: checkout.stripePaymentLinkId,
-            } : {}),
-          }).eq('id', artwork.id);
-          if (error) throw error;
-        }
-        save.textContent = checkout ? 'Saved + Stripe updated' : 'Saved';
-      } catch (error) {
-        console.error(error);
-        save.textContent = 'Try again';
-      }
-    });
-    return form;
+    const detail = document.createElement('span');
+    detail.textContent = `${artwork.source === 'legacy' ? 'Existing' : 'Studio'} · $${((artwork.price_cents || 0) / 100).toFixed(2)}`;
+    button.append(title, detail);
+    button.addEventListener('click', () => openEditor(artwork));
+    return button;
+  };
+
+  const openEditor = (artwork) => {
+    selectedArtwork = artwork;
+    catalogEditor.hidden = false;
+    document.querySelector('#editor-heading').textContent = artwork.title;
+    document.querySelector('#editor-source').textContent = artwork.source === 'legacy' ? 'Existing catalog' : 'Studio upload';
+    catalogEditor.elements.title.value = artwork.title || '';
+    catalogEditor.elements.description.value = artwork.description || '';
+    catalogEditor.elements.size_option.value = artwork.size_option || 'Custom';
+    catalogEditor.elements.price.value = ((artwork.price_cents || 0) / 100).toFixed(2);
+    catalogEditor.elements.availability.value = artwork.availability || 'available';
+    catalogEditor.elements.etsy_url.value = artwork.etsy_url || '';
+    catalogEditor.elements.new_arrival.checked = Boolean(artwork.new_arrival);
+    catalogEditor.elements.is_published.checked = artwork.is_published !== false;
+    catalogEditor.elements.image.value = '';
+    setStatus(editorStatus, etsyNumbers.has(Number(artwork.id)) ? 'This work is linked to Etsy; change its checkout price there too.' : '');
   };
 
   async function loadArtworks() {
@@ -152,7 +126,7 @@ if (!config?.url || !config?.anonKey) {
     const [uploadedResponse, linksResponse, settingsResponse] = await Promise.all([
       supabase.from('artworks').select('id,title,description,image_path,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
       supabase.from('legacy_artwork_links').select('legacy_number,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
-      supabase.from('legacy_artwork_settings').select('legacy_number,price_cents,availability'),
+      supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
     if (uploadedResponse.error || linksResponse.error || settingsResponse.error) return;
     const linksByNumber = Object.fromEntries(linksResponse.data.map((link) => [link.legacy_number, link]));
@@ -161,17 +135,71 @@ if (!config?.url || !config?.anonKey) {
       const setting = settingsByNumber[String(work.number)] || {};
       const link = linksByNumber[String(work.number)] || {};
       return {
-        id: String(work.number), title: work.title, description: work.description,
-        size_option: work.description, price_cents: setting.price_cents ?? work.priceCents,
+        id: String(work.number), title: setting.title ?? work.title, description: setting.description ?? work.description,
+        size_option: setting.size_option ?? work.description, price_cents: setting.price_cents ?? work.priceCents,
         availability: setting.availability ?? work.availability ?? 'available', imageUrl: new URL(work.image, window.location.origin).href,
+        etsy_url: setting.etsy_url ?? work.etsyUrl ?? '', is_published: setting.is_published ?? true, new_arrival: setting.new_arrival ?? work.new_arrival ?? false,
         ...link, source: 'legacy',
       };
     });
     const uploadedWorks = uploadedResponse.data.map((artwork) => ({
       ...artwork, imageUrl: `${config.url}/storage/v1/object/public/artwork-images/${artwork.image_path}`, source: 'studio',
     }));
-    artworkList.replaceChildren(...[...uploadedWorks, ...catalogWorks].map(makePriceEditor));
+    catalogItems = [...uploadedWorks, ...catalogWorks];
+    artworkList.replaceChildren(...catalogItems.map(makeCatalogItem));
   }
+
+  catalogEditor.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!selectedArtwork) return;
+    const data = new FormData(catalogEditor);
+    const image = data.get('image');
+    let imageUrl = selectedArtwork.imageUrl;
+    let imagePath = selectedArtwork.image_path;
+    if (image instanceof File && image.size) {
+      const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+      imagePath = `${Date.now()}-${safeName}`;
+      setStatus(editorStatus, 'Uploading image…');
+      const { error } = await supabase.storage.from('artwork-images').upload(imagePath, image, { cacheControl: '31536000', contentType: image.type, upsert: false });
+      if (error) return setStatus(editorStatus, error.message, 'error');
+      imageUrl = `${config.url}/storage/v1/object/public/artwork-images/${imagePath}`;
+    }
+    const values = {
+      title: data.get('title').trim(), description: data.get('description').trim(), sizeOption: data.get('size_option'),
+      priceCents: Math.round(Number(data.get('price')) * 100), imageUrl,
+      availability: data.get('availability'), etsyUrl: data.get('etsy_url').trim() || null,
+      newArrival: data.get('new_arrival') === 'on', isPublished: data.get('is_published') === 'on',
+    };
+    setStatus(editorStatus, 'Saving artwork…');
+    try {
+      const checkout = await replaceStripeCheckout(selectedArtwork, values);
+      if (selectedArtwork.source === 'legacy') {
+        const { error } = await supabase.from('legacy_artwork_settings').upsert({
+          legacy_number: selectedArtwork.id, title: values.title, description: values.description, image_url: imageUrl,
+          size_option: values.sizeOption, price_cents: values.priceCents, availability: values.availability,
+          etsy_url: values.etsyUrl, new_arrival: values.newArrival, is_published: values.isPublished,
+        });
+        if (error) throw error;
+        if (checkout) {
+          const { error: linkError } = await supabase.from('legacy_artwork_links').update({ price_cents: values.priceCents, stripe_payment_url: checkout.checkoutUrl, stripe_product_id: checkout.stripeProductId, stripe_payment_link_id: checkout.stripePaymentLinkId }).eq('legacy_number', selectedArtwork.id);
+          if (linkError) throw linkError;
+        }
+      } else {
+        const { error } = await supabase.from('artworks').update({
+          title: values.title, description: values.description || null, image_path: imagePath, size_option: values.sizeOption,
+          price_cents: values.priceCents, availability: values.availability, etsy_url: values.etsyUrl,
+          new_arrival: values.newArrival, is_published: values.isPublished,
+          ...(checkout ? { stripe_payment_url: checkout.checkoutUrl, stripe_product_id: checkout.stripeProductId, stripe_payment_link_id: checkout.stripePaymentLinkId } : {}),
+        }).eq('id', selectedArtwork.id);
+        if (error) throw error;
+      }
+      setStatus(editorStatus, checkout ? 'Saved. Stripe checkout was updated too.' : 'Saved.', 'success');
+      await loadArtworks();
+    } catch (error) {
+      console.error(error);
+      setStatus(editorStatus, error.message || 'Could not save this artwork.', 'error');
+    }
+  });
 
   document.querySelector('#artwork-form').addEventListener('submit', async (event) => {
     event.preventDefault();
