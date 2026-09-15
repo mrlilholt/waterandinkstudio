@@ -20,6 +20,7 @@ if (config?.url && config?.anonKey) {
     const withImageUrls = artworks.map((artwork) => ({
       ...artwork,
       imageUrl: `${config.url}/storage/v1/object/public/artwork-images/${artwork.image_path}`,
+      additionalImages: (artwork.additional_image_paths || []).map((path) => `${config.url}/storage/v1/object/public/artwork-images/${path}`),
     }));
     window.dispatchEvent(new CustomEvent('studio-artworks-ready', { detail: withImageUrls }));
     if (legacyLinksResponse.ok) {

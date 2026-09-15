@@ -204,6 +204,7 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
     image: artwork.imageUrl,
     description: artwork.description,
     priceCents: artwork.price_cents,
+    images: artwork.additionalImages,
     checkoutUrl: artwork.stripe_payment_url,
     etsyUrl: artwork.etsy_url,
   }));

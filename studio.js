@@ -136,7 +136,7 @@ if (!config?.url || !config?.anonKey) {
   async function loadArtworks() {
     await waitForCatalog();
     const [uploadedResponse, linksResponse, settingsResponse] = await Promise.all([
-      supabase.from('artworks').select('id,title,description,image_path,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
+      supabase.from('artworks').select('id,title,description,image_path,additional_image_paths,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
       supabase.from('legacy_artwork_links').select('legacy_number,title,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
       supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,additional_images,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
@@ -146,7 +146,7 @@ if (!config?.url || !config?.anonKey) {
       // existing site catalog should remain editable while that migration is pending.
       const { data: basicUploads } = await supabase
         .from('artworks')
-        .select('id,title,description,image_path,size_option,price_cents,stripe_payment_url,etsy_url,availability,new_arrival,is_published,created_at')
+        .select('id,title,description,image_path,additional_image_paths,size_option,price_cents,stripe_payment_url,etsy_url,availability,new_arrival,is_published,created_at')
         .order('created_at', { ascending: false });
       uploaded = basicUploads || [];
     }
@@ -258,18 +258,21 @@ if (!config?.url || !config?.anonKey) {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    const image = data.get('image');
-    if (!(image instanceof File) || !image.size) return;
+    const images = Array.from(form.elements.image.files || []);
+    if (!images.length) return;
 
-    const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
-    const path = `${Date.now()}-${safeName}`;
     setStatus(uploadStatus, 'Uploading image…');
-    const { error: uploadError } = await supabase.storage.from('artwork-images').upload(path, image, {
-      cacheControl: '31536000',
-      contentType: image.type,
-      upsert: false,
-    });
-    if (uploadError) return setStatus(uploadStatus, uploadError.message, 'error');
+    const paths = [];
+    for (const [index, image] of images.entries()) {
+      const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+      const path = `${Date.now()}-${index}-${safeName}`;
+      const { error: uploadError } = await supabase.storage.from('artwork-images').upload(path, image, {
+        cacheControl: '31536000', contentType: image.type, upsert: false,
+      });
+      if (uploadError) return setStatus(uploadStatus, uploadError.message, 'error');
+      paths.push(path);
+    }
+    const [path, ...additionalImagePaths] = paths;
 
     let stripePaymentUrl = data.get('stripe_payment_url').trim() || null;
     let stripeProductId = null;
@@ -309,6 +312,7 @@ if (!config?.url || !config?.anonKey) {
       stripe_payment_url: stripePaymentUrl,
       stripe_product_id: stripeProductId,
       stripe_payment_link_id: stripePaymentLinkId,
+      additional_image_paths: additionalImagePaths,
       image_path: path,
       new_arrival: data.get('new_arrival') === 'on',
       is_published: data.get('is_published') === 'on',
