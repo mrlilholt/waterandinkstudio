@@ -134,7 +134,6 @@ if (!config?.url || !config?.anonKey) {
   };
 
   async function loadArtworks() {
-    await waitForCatalog();
     const [uploadedResponse, linksResponse, settingsResponse] = await Promise.all([
       supabase.from('artworks').select('id,title,description,image_path,additional_image_paths,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
       supabase.from('legacy_artwork_links').select('legacy_number,title,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
