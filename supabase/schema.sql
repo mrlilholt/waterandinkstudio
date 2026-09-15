@@ -75,6 +75,7 @@ create table if not exists public.legacy_artwork_settings (
   etsy_url text,
   is_published boolean,
   new_arrival boolean,
+  additional_images jsonb not null default '[]'::jsonb,
   updated_at timestamptz not null default now()
 );
 

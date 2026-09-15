@@ -51,6 +51,7 @@
 .artwork-dialog::backdrop { background:rgba(22,32,29,.7); }
 .artwork-dialog-grid { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(260px,.8fr); max-height:88vh; }
 .artwork-dialog-grid img { background:#e9e4dc; display:block; height:88vh; max-height:760px; object-fit:contain; width:100%; }
+.artwork-preview-thumbnails { display:flex; gap:.45rem; overflow:auto; padding:.6rem; }.artwork-preview-thumbnails button { background:transparent; border:1px solid var(--line); cursor:pointer; padding:0; width:58px; }.artwork-preview-thumbnails img { height:58px; object-fit:cover; width:58px; }
 .artwork-dialog-copy { align-self:center; padding:clamp(1.7rem,5vw,4rem); }
 .artwork-dialog-copy h2 { font:400 clamp(2.3rem,4.5vw,4.4rem)/.92 Fraunces,Georgia,serif; letter-spacing:-.06em; margin:0; }
 .artwork-dialog-copy > p:not(.eyebrow) { font-size:.95rem; line-height:1.75; margin:1.5rem 0; }

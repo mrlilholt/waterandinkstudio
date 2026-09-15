@@ -14,6 +14,24 @@ const catalogEditor = document.querySelector('#catalog-editor');
 const editorStatus = document.querySelector('#editor-status');
 let catalogItems = [];
 let selectedArtwork = null;
+const legacyExtras = [
+  { number: 4, title: 'Rising Water No. 001', priceCents: 4200 },
+  { number: 77, title: 'Enso No. 010', priceCents: 13200 },
+  { number: 95, title: 'Bird Study No. 005', priceCents: 4200 },
+  { number: 109, title: 'Bird Study No. 003', priceCents: 4200 },
+  { number: 117, title: 'Bamboo Study No. 015', priceCents: 13200 },
+  { number: 118, title: 'Mountain Mist No. 009', priceCents: 4200, availability: 'sold' },
+];
+const legacyImage = (number) => {
+  const special = {
+    117: 'assets/collection/bamboo-study-015.png', 118: 'assets/collection/mountain-mist-009.png',
+    131: 'assets/new-arrivals/large-winter-tree-001.png', 132: 'assets/new-arrivals/large-tree-001.png',
+    133: 'assets/new-arrivals/long-bird-001.png', 134: 'assets/new-arrivals/large-tree-002.png',
+    135: 'assets/new-arrivals/large-tree-003.png', 136: 'assets/new-arrivals/study-on-stillness-4-panels.png',
+    137: 'assets/new-arrivals/growth-enso.png',
+  };
+  return special[number] || `assets/collection/original-${String(number).padStart(3, '0')}.png`;
+};
 
 const setStatus = (element, message, type = '') => {
   element.textContent = message;
@@ -119,8 +137,8 @@ if (!config?.url || !config?.anonKey) {
     await waitForCatalog();
     const [uploadedResponse, linksResponse, settingsResponse] = await Promise.all([
       supabase.from('artworks').select('id,title,description,image_path,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
-      supabase.from('legacy_artwork_links').select('legacy_number,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
-      supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
+      supabase.from('legacy_artwork_links').select('legacy_number,title,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
+      supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,additional_images,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
     let uploaded = uploadedResponse.data || [];
     if (uploadedResponse.error) {
@@ -142,17 +160,19 @@ if (!config?.url || !config?.anonKey) {
     const linksByNumber = Object.fromEntries((linksResponse.data || []).map((link) => [link.legacy_number, link]));
     const settingsByNumber = Object.fromEntries(settings.map((setting) => [setting.legacy_number, setting]));
     const staticWorks = catalogSource.contentWindow?.WATER_AND_INK_STATIC_ARTWORKS || [];
-    if (!staticWorks.length) {
-      setStatus(editorStatus, 'The site catalog could not be loaded. Refresh this page once, then try again.', 'error');
-    }
-    const catalogWorks = staticWorks.map((work) => {
+    const savedCatalog = staticWorks.length ? staticWorks : [
+      ...(linksResponse.data || []).map((link) => ({ number: Number(link.legacy_number), title: link.title, priceCents: link.price_cents })),
+      ...legacyExtras,
+    ];
+    const uniqueCatalog = Array.from(new Map(savedCatalog.map((work) => [work.number, work])).values());
+    const catalogWorks = uniqueCatalog.map((work) => {
       const setting = settingsByNumber[String(work.number)] || {};
       const link = linksByNumber[String(work.number)] || {};
       return {
         id: String(work.number), title: setting.title ?? work.title, description: setting.description ?? work.description,
         size_option: setting.size_option ?? work.description, price_cents: setting.price_cents ?? work.priceCents,
-        availability: setting.availability ?? work.availability ?? 'available', imageUrl: new URL(work.image, window.location.origin).href,
-        etsy_url: setting.etsy_url ?? work.etsyUrl ?? '', is_published: setting.is_published ?? true, new_arrival: setting.new_arrival ?? work.new_arrival ?? false,
+        availability: setting.availability ?? work.availability ?? 'available', imageUrl: new URL(work.image || legacyImage(work.number), window.location.origin).href,
+        etsy_url: setting.etsy_url ?? work.etsyUrl ?? '', additional_images: setting.additional_images ?? [], is_published: setting.is_published ?? true, new_arrival: setting.new_arrival ?? work.new_arrival ?? false,
         ...link, source: 'legacy',
       };
     });
@@ -178,16 +198,23 @@ if (!config?.url || !config?.anonKey) {
     event.preventDefault();
     if (!selectedArtwork) return;
     const data = new FormData(catalogEditor);
-    const image = data.get('image');
+    const images = Array.from(catalogEditor.elements.image.files || []);
     let imageUrl = selectedArtwork.imageUrl;
     let imagePath = selectedArtwork.image_path;
-    if (image instanceof File && image.size) {
-      const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
-      imagePath = `${Date.now()}-${safeName}`;
+    const additionalImages = [...(selectedArtwork.additional_images || selectedArtwork.additional_image_paths || [])];
+    if (images.length) {
       setStatus(editorStatus, 'Uploading image…');
-      const { error } = await supabase.storage.from('artwork-images').upload(imagePath, image, { cacheControl: '31536000', contentType: image.type, upsert: false });
-      if (error) return setStatus(editorStatus, error.message, 'error');
-      imageUrl = `${config.url}/storage/v1/object/public/artwork-images/${imagePath}`;
+      const uploadedUrls = [];
+      for (const [index, image] of images.entries()) {
+        const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+        const path = `${Date.now()}-${index}-${safeName}`;
+        const { error } = await supabase.storage.from('artwork-images').upload(path, image, { cacheControl: '31536000', contentType: image.type, upsert: false });
+        if (error) return setStatus(editorStatus, error.message, 'error');
+        uploadedUrls.push(`${config.url}/storage/v1/object/public/artwork-images/${path}`);
+        if (index === 0) imagePath = path;
+      }
+      imageUrl = uploadedUrls[0];
+      additionalImages.push(...uploadedUrls.slice(1));
     }
     const values = {
       title: data.get('title').trim(), description: data.get('description').trim(), sizeOption: data.get('size_option'),
@@ -202,7 +229,7 @@ if (!config?.url || !config?.anonKey) {
         const { error } = await supabase.from('legacy_artwork_settings').upsert({
           legacy_number: selectedArtwork.id, title: values.title, description: values.description, image_url: imageUrl,
           size_option: values.sizeOption, price_cents: values.priceCents, availability: values.availability,
-          etsy_url: values.etsyUrl, new_arrival: values.newArrival, is_published: values.isPublished,
+          etsy_url: values.etsyUrl, additional_images: additionalImages, new_arrival: values.newArrival, is_published: values.isPublished,
         });
         if (error) throw error;
         if (checkout) {
@@ -214,6 +241,7 @@ if (!config?.url || !config?.anonKey) {
           title: values.title, description: values.description || null, image_path: imagePath, size_option: values.sizeOption,
           price_cents: values.priceCents, availability: values.availability, etsy_url: values.etsyUrl,
           new_arrival: values.newArrival, is_published: values.isPublished,
+          additional_image_paths: additionalImages,
           ...(checkout ? { stripe_payment_url: checkout.checkoutUrl, stripe_product_id: checkout.stripeProductId, stripe_payment_link_id: checkout.stripePaymentLinkId } : {}),
         }).eq('id', selectedArtwork.id);
         if (error) throw error;

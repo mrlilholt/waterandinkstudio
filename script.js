@@ -38,12 +38,13 @@ const formatPrice = (priceCents) => Number.isInteger(priceCents) ? `$${(priceCen
 
 const renderCollectionWorks = (grid, works) => {
   if (!grid) return;
-  grid.innerHTML = works.map(({ number, title, image, description = '', priceCents = null, checkoutUrl = '', etsyUrl = '', availability = 'available' }, index) => {
+  grid.innerHTML = works.map(({ number, title, image, images = [], description = '', priceCents = null, checkoutUrl = '', etsyUrl = '', availability = 'available' }, index) => {
     const isEtsyWork = Boolean(etsyUrl) || etsyOriginals.has(number);
     const isSold = availability === 'sold';
     const safeTitle = escapeHtml(title);
     const safeDescription = escapeHtml(description);
     const safeImage = escapeHtml(image);
+    const safeImages = escapeHtml(JSON.stringify([image, ...images]));
     const safeCheckoutUrl = escapeHtml(checkoutUrl);
     const safeEtsyUrl = escapeHtml(etsyUrl || 'https://www.etsy.com/shop/WATERandINKSTUDIOArt');
     const price = formatPrice(priceCents);
@@ -54,7 +55,7 @@ const renderCollectionWorks = (grid, works) => {
       : `${safeCheckoutUrl ? `<a class="collection-shop-link collection-buy-link" href="${safeCheckoutUrl}" target="_blank" rel="noreferrer">Buy now ↗</a>` : ''}<button class="inquiry-trigger" type="button" data-artwork-title="${safeTitle}">Purchase inquiry</button>`;
     return `
     <article class="collection-work${isEtsyWork ? ' collection-work-featured' : ''}">
-      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" data-checkout-url="${safeCheckoutUrl}" aria-label="View larger image of ${safeTitle}">
+      <button class="artwork-preview" type="button" data-artwork-title="${safeTitle}" data-artwork-image="${safeImage}" data-artwork-images="${safeImages}" data-artwork-description="${safeDescription}" data-artwork-price="${price}" data-checkout-url="${safeCheckoutUrl}" aria-label="View larger image of ${safeTitle}">
         <img src="${safeImage}" alt="${safeTitle} — original Water & Ink Studio artwork" ${index < 8 ? '' : 'loading="lazy"'} />
       </button>
       <div class="collection-work-meta"><h3>${safeTitle}</h3><p>Original${price ? ` · ${price}` : ''}</p>${purchaseActions}</div>
@@ -67,6 +68,7 @@ const withLegacyCheckouts = (works) => works.map((work) => ({
   title: legacySettingsByNumber[work.number]?.title ?? work.title,
   description: legacySettingsByNumber[work.number]?.description ?? work.description,
   image: legacySettingsByNumber[work.number]?.image_url ?? work.image,
+  images: legacySettingsByNumber[work.number]?.additional_images ?? work.images ?? [],
   priceCents: legacySettingsByNumber[work.number]?.price_cents ?? work.priceCents,
   availability: legacySettingsByNumber[work.number]?.availability ?? work.availability ?? 'available',
   etsyUrl: legacySettingsByNumber[work.number]?.etsy_url ?? work.etsyUrl,
@@ -237,8 +239,16 @@ document.addEventListener('click', (event) => {
   const preview = event.target.closest('.artwork-preview');
   if (!preview) return;
   const { artworkTitle, artworkImage, artworkDescription, artworkPrice, checkoutUrl } = preview.dataset;
+  let artworkImages = [artworkImage];
+  try { artworkImages = JSON.parse(preview.dataset.artworkImages || '[]').filter(Boolean); } catch { /* primary image remains */ }
   artworkDialog.querySelector('#artwork-preview-image').src = artworkImage;
   artworkDialog.querySelector('#artwork-preview-image').alt = artworkTitle;
+  const thumbnails = artworkDialog.querySelector('#artwork-preview-thumbnails');
+  thumbnails.replaceChildren(...artworkImages.map((image, index) => {
+    const button = document.createElement('button'); button.type = 'button'; button.setAttribute('aria-label', `View image ${index + 1}`);
+    const thumb = document.createElement('img'); thumb.src = image; thumb.alt = ''; button.append(thumb);
+    button.addEventListener('click', () => { artworkDialog.querySelector('#artwork-preview-image').src = image; }); return button;
+  }));
   artworkDialog.querySelector('#artwork-preview-title').textContent = artworkTitle;
   artworkDialog.querySelector('#artwork-preview-description').textContent = artworkDescription;
   artworkDialog.querySelector('#artwork-preview-price').textContent = artworkPrice;

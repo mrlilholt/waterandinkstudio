@@ -5,3 +5,5 @@ alter table public.legacy_artwork_settings add column if not exists size_option 
 alter table public.legacy_artwork_settings add column if not exists etsy_url text;
 alter table public.legacy_artwork_settings add column if not exists is_published boolean;
 alter table public.legacy_artwork_settings add column if not exists new_arrival boolean;
+alter table public.legacy_artwork_settings add column if not exists additional_images jsonb not null default '[]'::jsonb;
+alter table public.artworks add column if not exists additional_image_paths jsonb not null default '[]'::jsonb;
