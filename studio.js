@@ -122,7 +122,16 @@ if (!config?.url || !config?.anonKey) {
       supabase.from('legacy_artwork_links').select('legacy_number,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
       supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
-    if (uploadedResponse.error) return setStatus(authStatus, uploadedResponse.error.message, 'error');
+    let uploaded = uploadedResponse.data || [];
+    if (uploadedResponse.error) {
+      // Older projects may not yet have the Stripe tracking columns. The
+      // existing site catalog should remain editable while that migration is pending.
+      const { data: basicUploads } = await supabase
+        .from('artworks')
+        .select('id,title,description,image_path,size_option,price_cents,stripe_payment_url,etsy_url,availability,new_arrival,is_published,created_at')
+        .order('created_at', { ascending: false });
+      uploaded = basicUploads || [];
+    }
     // The list deliberately falls back to the site catalog while the optional
     // editor migration is awaiting its first run.
     let settings = settingsResponse.data || [];
@@ -132,7 +141,11 @@ if (!config?.url || !config?.anonKey) {
     }
     const linksByNumber = Object.fromEntries((linksResponse.data || []).map((link) => [link.legacy_number, link]));
     const settingsByNumber = Object.fromEntries(settings.map((setting) => [setting.legacy_number, setting]));
-    const catalogWorks = catalogSource.contentWindow.WATER_AND_INK_STATIC_ARTWORKS.map((work) => {
+    const staticWorks = catalogSource.contentWindow?.WATER_AND_INK_STATIC_ARTWORKS || [];
+    if (!staticWorks.length) {
+      setStatus(editorStatus, 'The site catalog could not be loaded. Refresh this page once, then try again.', 'error');
+    }
+    const catalogWorks = staticWorks.map((work) => {
       const setting = settingsByNumber[String(work.number)] || {};
       const link = linksByNumber[String(work.number)] || {};
       return {
@@ -143,7 +156,7 @@ if (!config?.url || !config?.anonKey) {
         ...link, source: 'legacy',
       };
     });
-    const uploadedWorks = uploadedResponse.data.map((artwork) => ({
+    const uploadedWorks = uploaded.map((artwork) => ({
       ...artwork, imageUrl: `${config.url}/storage/v1/object/public/artwork-images/${artwork.image_path}`, source: 'studio',
     }));
     catalogItems = [...uploadedWorks, ...catalogWorks];
