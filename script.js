@@ -207,6 +207,7 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
     images: artwork.additionalImages,
     checkoutUrl: artwork.stripe_payment_url,
     etsyUrl: artwork.etsy_url,
+    new_arrival: artwork.new_arrival,
   }));
   renderArtworkCatalog();
 });
