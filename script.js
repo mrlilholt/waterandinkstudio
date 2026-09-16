@@ -77,9 +77,13 @@ const withLegacyCheckouts = (works) => works.map((work) => ({
   checkoutUrl: (legacySettingsByNumber[work.number]?.availability ?? work.availability) === 'sold' ? '' : (legacyCheckoutByNumber[work.number]?.stripe_payment_url || work.checkoutUrl || ''),
 }));
 const renderArtworkCatalog = () => {
-  const remoteNewArrivals = publishedRemoteWorks.filter((artwork) => artwork.new_arrival);
+  const remoteNewArrivals = publishedRemoteWorks
+    .filter((artwork) => artwork.new_arrival)
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const legacyWorks = withLegacyCheckouts([...newArrivals, ...baseCollectionWorks]).filter((artwork) => artwork.is_published !== false);
-  renderCollectionWorks(newArrivalsGrid, [...remoteNewArrivals, ...legacyWorks.filter((artwork) => artwork.new_arrival)]);
+  // Keep the home-page shelf current without removing older work from the full gallery.
+  const newestWorks = [...remoteNewArrivals, ...legacyWorks.filter((artwork) => artwork.new_arrival)].slice(0, 10);
+  renderCollectionWorks(newArrivalsGrid, newestWorks);
   renderCollectionWorks(collectionGrid, [...publishedRemoteWorks, ...legacyWorks]);
 };
 const workTitles = {
@@ -208,6 +212,7 @@ window.addEventListener('studio-artworks-ready', ({ detail: artworks }) => {
     checkoutUrl: artwork.stripe_payment_url,
     etsyUrl: artwork.etsy_url,
     new_arrival: artwork.new_arrival,
+    createdAt: artwork.created_at,
   }));
   renderArtworkCatalog();
 });
