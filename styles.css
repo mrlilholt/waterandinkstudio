@@ -21,8 +21,11 @@
 .works-wall { display:grid; grid-template-columns:repeat(6,1fr); gap:9px; margin-top:8vw; }
 .works-wall img { width:100%; height:220px; display:block; object-fit:cover; filter:saturate(.8); }
 .works-wall img:nth-child(4n) { grid-column:span 2; }.works-wall img:nth-child(4n + 2) { height:300px; }
-.wear-art > img { width:100%; height:100%; position:absolute; inset:0; display:block; object-fit:cover; filter:brightness(.7) saturate(.8); }
-.wear-art p { z-index:1; }
+.wear-art > img { width:100%; height:100%; position:absolute; inset:0; display:block; object-fit:cover; filter:none; transition:transform .5s ease; }
+.wear-art:hover > img { transform:scale(1.025); }
+.wear-art p { color:var(--ink); z-index:1; }
+.wear-art p span { display:inline-block; margin-left:.35rem; transition:transform .25s ease; }
+.wear-art:hover p span { transform:translate(.18rem,-.18rem); }
 @media (max-width:760px) { .hero-art img { min-height:360px; }.works-wall { grid-template-columns:repeat(2,1fr); gap:6px; }.works-wall img,.works-wall img:nth-child(4n + 2) { height:170px; }.works-wall img:nth-child(4n) { grid-column:span 2; height:190px; } }
 
 .collection-note { margin:0 0 3rem; color:var(--moss); font-size:.86rem; letter-spacing:.04em; }
