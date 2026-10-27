@@ -38,6 +38,53 @@ const setStatus = (element, message, type = '') => {
   element.className = `studio-status ${type}`;
 };
 
+// Keep the visible order as the source of truth for both forms.
+const storageImageUrl = (path) => `${config.url}/storage/v1/object/public/artwork-images/${path}`;
+function imageOrderPicker(input, container) {
+  let items = [];
+  const release = () => items.forEach((item) => { if (item.file) URL.revokeObjectURL(item.url); });
+  const render = () => {
+    container.replaceChildren();
+    items.forEach((item, index) => {
+      const card = document.createElement('li');
+      const preview = document.createElement('img');
+      preview.src = item.url;
+      preview.alt = item.file?.name || `Listing photo ${index + 1}`;
+      const caption = document.createElement('p');
+      caption.textContent = index === 0 ? 'Main image' : `Photo ${index + 1}`;
+      card.append(preview, caption);
+      const action = (label, disabled, moveTo) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = label;
+        button.disabled = disabled;
+        button.setAttribute('aria-label', `${label}: photo ${index + 1}`);
+        button.addEventListener('click', () => {
+          items.splice(moveTo, 0, items.splice(index, 1)[0]);
+          render();
+          container.children[moveTo].querySelector('button:not(:disabled)')?.focus();
+        });
+        card.append(button);
+      };
+      action('Make main', index === 0, 0);
+      action('Move earlier', index === 0, index - 1);
+      action('Move later', index === items.length - 1, index + 1);
+      container.append(card);
+    });
+  };
+  input.addEventListener('change', () => {
+    items.push(...Array.from(input.files || [], (file) => ({ file, url: URL.createObjectURL(file) })));
+    input.value = '';
+    render();
+  });
+  return {
+    getItems: () => items.map((item) => ({ ...item })),
+    setItems(next) { release(); items = next; render(); },
+  };
+}
+const newImagePicker = imageOrderPicker(document.querySelector('#artwork-form input[name="image"]'), document.querySelector('#new-image-order'));
+const editorImagePicker = imageOrderPicker(catalogEditor.elements.image, document.querySelector('#editor-image-order'));
+
 const priceDefaults = {
   '8.5 × 11 in': 42,
   'Approx. 18 × 18 in': 55,
@@ -130,12 +177,16 @@ if (!config?.url || !config?.anonKey) {
     catalogEditor.elements.new_arrival.checked = Boolean(artwork.new_arrival);
     catalogEditor.elements.is_published.checked = artwork.is_published !== false;
     catalogEditor.elements.image.value = '';
+    const existingImages = artwork.source === 'studio'
+      ? [artwork.image_path, ...(artwork.additional_image_paths || [])].filter(Boolean).map((path) => ({ path, url: storageImageUrl(path) }))
+      : [artwork.imageUrl, ...(artwork.additional_images || [])].filter(Boolean).map((url) => ({ url }));
+    editorImagePicker.setItems(existingImages);
     setStatus(editorStatus, etsyNumbers.has(Number(artwork.id)) ? 'This work is linked to Etsy; change its checkout price there too.' : '');
   };
 
   async function loadArtworks() {
     const [uploadedResponse, linksResponse, settingsResponse] = await Promise.all([
-      supabase.from('artworks').select('id,title,description,image_path,additional_image_paths,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,created_at').order('created_at', { ascending: false }),
+      supabase.from('artworks').select('id,title,description,image_path,additional_image_paths,size_option,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id,etsy_url,availability,new_arrival,is_published,created_at').order('created_at', { ascending: false }),
       supabase.from('legacy_artwork_links').select('legacy_number,title,price_cents,stripe_payment_url,stripe_product_id,stripe_payment_link_id'),
       supabase.from('legacy_artwork_settings').select('legacy_number,title,description,image_url,additional_images,size_option,price_cents,availability,etsy_url,is_published,new_arrival'),
     ]);
@@ -170,8 +221,8 @@ if (!config?.url || !config?.anonKey) {
       return {
         id: String(work.number), title: setting.title ?? work.title, description: setting.description ?? work.description,
         size_option: setting.size_option ?? work.description, price_cents: setting.price_cents ?? work.priceCents,
-        availability: setting.availability ?? work.availability ?? 'available', imageUrl: new URL(work.image || legacyImage(work.number), window.location.origin).href,
-        etsy_url: setting.etsy_url ?? work.etsyUrl ?? '', additional_images: setting.additional_images ?? [], is_published: setting.is_published ?? true, new_arrival: setting.new_arrival ?? work.new_arrival ?? false,
+        availability: setting.availability ?? work.availability ?? 'available', imageUrl: new URL(setting.image_url || work.image || legacyImage(work.number), window.location.href).href,
+        etsy_url: setting.etsy_url ?? work.etsyUrl ?? '', additional_images: setting.additional_images ?? work.images ?? [], is_published: setting.is_published ?? true, new_arrival: setting.new_arrival ?? work.new_arrival ?? false,
         ...link, source: 'legacy',
       };
     });
@@ -196,24 +247,32 @@ if (!config?.url || !config?.anonKey) {
   catalogEditor.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!selectedArtwork) return;
+    const submitButton = catalogEditor.querySelector('[type="submit"]');
+    if (submitButton.disabled) return;
+    submitButton.disabled = true;
     const data = new FormData(catalogEditor);
-    const images = Array.from(catalogEditor.elements.image.files || []);
-    let imageUrl = selectedArtwork.imageUrl;
-    let imagePath = selectedArtwork.image_path;
-    const additionalImages = [...(selectedArtwork.additional_images || selectedArtwork.additional_image_paths || [])];
-    if (images.length) {
-      setStatus(editorStatus, 'Uploading image…');
-      const uploadedUrls = [];
-      for (const [index, image] of images.entries()) {
-        const safeName = image.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
-        const path = `${Date.now()}-${index}-${safeName}`;
-        const { error } = await supabase.storage.from('artwork-images').upload(path, image, { cacheControl: '31536000', contentType: image.type, upsert: false });
-        if (error) return setStatus(editorStatus, error.message, 'error');
-        uploadedUrls.push(`${config.url}/storage/v1/object/public/artwork-images/${path}`);
-        if (index === 0) imagePath = path;
+    let imageUrl;
+    let imagePath;
+    let additionalImages;
+    try {
+      const ordered = editorImagePicker.getItems();
+      for (const item of ordered) {
+        if (!item.file) continue;
+        setStatus(editorStatus, 'Uploading image…');
+        const safeName = item.file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+        item.path = `${crypto.randomUUID()}-${safeName}`;
+        const { error } = await supabase.storage.from('artwork-images').upload(item.path, item.file, { cacheControl: '31536000', contentType: item.file.type, upsert: false });
+        if (error) throw error;
+        item.url = storageImageUrl(item.path);
       }
-      imageUrl = uploadedUrls[0];
-      additionalImages.push(...uploadedUrls.slice(1));
+      if (!ordered.length) throw new Error('Choose at least one image.');
+      imageUrl = ordered[0].url;
+      imagePath = ordered[0].path;
+      additionalImages = ordered.slice(1).map((item) => selectedArtwork.source === 'studio' ? item.path : item.url);
+    } catch (error) {
+      setStatus(editorStatus, error.message || 'Image upload failed. Please try again.', 'error');
+      submitButton.disabled = false;
+      return;
     }
     const values = {
       title: data.get('title').trim(), description: data.get('description').trim(), sizeOption: data.get('size_option'),
@@ -250,15 +309,51 @@ if (!config?.url || !config?.anonKey) {
     } catch (error) {
       console.error(error);
       setStatus(editorStatus, error.message || 'Could not save this artwork.', 'error');
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+
+  document.querySelector('#delete-artwork').addEventListener('click', async () => {
+    if (!selectedArtwork) return;
+    const deleteButton = document.querySelector('#delete-artwork');
+    if (!deleteButton.dataset.confirming) {
+      deleteButton.dataset.confirming = 'true';
+      deleteButton.textContent = 'Confirm removal';
+      return setStatus(editorStatus, `Click “Confirm removal” to permanently remove “${selectedArtwork.title}”.`, 'error');
+    }
+    if (selectedArtwork.source !== 'studio') {
+      return setStatus(editorStatus, 'This catalog work cannot be removed here.', 'error');
+    }
+    deleteButton.disabled = true;
+    setStatus(editorStatus, 'Removing listing…');
+    try {
+      const { error } = await supabase.from('artworks').delete().eq('id', selectedArtwork.id);
+      if (error) throw error;
+      selectedArtwork = null;
+      catalogEditor.hidden = true;
+      setStatus(editorStatus, 'Listing removed.', 'success');
+      await loadArtworks();
+    } catch (error) {
+      console.error(error);
+      setStatus(editorStatus, error.message || 'Could not remove this listing.', 'error');
+    } finally {
+      deleteButton.dataset.confirming = '';
+      deleteButton.textContent = 'Remove listing';
+      deleteButton.disabled = false;
     }
   });
 
   document.querySelector('#artwork-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
+    const submitButton = form.querySelector('[type="submit"]');
+    if (submitButton.disabled) return;
     const data = new FormData(form);
-    const images = Array.from(form.elements.image.files || []);
-    if (!images.length) return;
+    const images = newImagePicker.getItems().map((item) => item.file);
+    if (!images.length) return setStatus(uploadStatus, 'Choose at least one photo before publishing.', 'error');
+
+    submitButton.disabled = true;
 
     setStatus(uploadStatus, 'Uploading image…');
     const paths = [];
@@ -268,7 +363,10 @@ if (!config?.url || !config?.anonKey) {
       const { error: uploadError } = await supabase.storage.from('artwork-images').upload(path, image, {
         cacheControl: '31536000', contentType: image.type, upsert: false,
       });
-      if (uploadError) return setStatus(uploadStatus, uploadError.message, 'error');
+      if (uploadError) {
+        submitButton.disabled = false;
+        return setStatus(uploadStatus, uploadError.message, 'error');
+      }
       paths.push(path);
     }
     const [path, ...additionalImagePaths] = paths;
@@ -294,8 +392,21 @@ if (!config?.url || !config?.anonKey) {
           priceCents: Math.round(Number(data.get('price')) * 100),
         }),
       });
-      const checkout = await checkoutResponse.json();
-      if (!checkoutResponse.ok) return setStatus(uploadStatus, checkout.error || 'Stripe checkout could not be created.', 'error');
+      let checkout;
+      try {
+        checkout = await checkoutResponse.json();
+      } catch {
+        submitButton.disabled = false;
+        return setStatus(
+          uploadStatus,
+          'Checkout service is unavailable. Open the Netlify-hosted Studio editor to publish this work.',
+          'error',
+        );
+      }
+      if (!checkoutResponse.ok) {
+        submitButton.disabled = false;
+        return setStatus(uploadStatus, checkout.error || 'Stripe checkout could not be created.', 'error');
+      }
       stripePaymentUrl = checkout.checkoutUrl;
       stripeProductId = checkout.stripeProductId;
       stripePaymentLinkId = checkout.stripePaymentLinkId;
@@ -316,12 +427,17 @@ if (!config?.url || !config?.anonKey) {
       new_arrival: data.get('new_arrival') === 'on',
       is_published: data.get('is_published') === 'on',
     });
-    if (artworkError) return setStatus(uploadStatus, artworkError.message, 'error');
+    if (artworkError) {
+      submitButton.disabled = false;
+      return setStatus(uploadStatus, artworkError.message, 'error');
+    }
 
     form.reset();
+    newImagePicker.setItems([]);
     form.elements.new_arrival.checked = true;
     form.elements.is_published.checked = true;
     setStatus(uploadStatus, 'Artwork published. It is now live in your collection.', 'success');
+    submitButton.disabled = false;
     loadArtworks();
   });
 }

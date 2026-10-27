@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=5" />
+    <link rel="stylesheet" href="styles.css?v=6" />
   </head>
   <body>
     <main class="studio-page">
@@ -31,7 +31,8 @@
           <h2>Add artwork</h2>
           <p>Publishing makes the work appear in the full collection. Mark it as a New Arrival to also place it at the top of that collection.</p>
           <form class="studio-form" id="artwork-form">
-            <label>Artwork images <input name="image" type="file" accept="image/png,image/jpeg,image/webp" multiple required /></label>
+            <label>Artwork images <input name="image" type="file" accept="image/png,image/jpeg,image/webp" multiple /><small>Add photos, then choose the main image and arrange the rest below. The first photo appears in the collection.</small></label>
+            <ol class="studio-image-order" id="new-image-order" aria-label="New listing image order"></ol>
             <label>Title <input name="title" autocomplete="off" placeholder="e.g. Pine & Stone No. 016" required /></label>
             <label>Description <textarea name="description" placeholder="Optional notes, materials, or story behind the work."></textarea></label>
             <label>Size <select name="size_option" id="size-option" required>
@@ -64,7 +65,8 @@
             <form class="studio-form studio-editor" id="catalog-editor" hidden>
               <p class="eyebrow" id="editor-source"></p>
               <h3 id="editor-heading"></h3>
-              <label>Artwork images <input name="image" type="file" accept="image/png,image/jpeg,image/webp" multiple /></label>
+              <label>Artwork images <input name="image" type="file" accept="image/png,image/jpeg,image/webp" multiple /><small>Add photos or reorder the existing ones below. The first photo is the main listing image. Save artwork to apply your changes.</small></label>
+              <ol class="studio-image-order" id="editor-image-order" aria-label="Listing image order"></ol>
               <label>Title <input name="title" required /></label>
               <label>Description <textarea name="description"></textarea></label>
               <label>Size <select name="size_option"><option value="8.5 × 11 in">8.5 × 11 in</option><option value="Approx. 18 × 18 in">Approx. 18 × 18 in</option><option value="18 × 36 in (3 ft banner)">18 × 36 in (3 ft banner)</option><option value="18 × 48 in (4 ft banner)">18 × 48 in (4 ft banner)</option><option value="18 × 60 in (5 ft banner)">18 × 60 in (5 ft banner)</option><option value="18 × 72 in (6 ft banner)">18 × 72 in (6 ft banner)</option><option value="Custom">Custom</option></select></label>
@@ -73,7 +75,10 @@
               <label>Shop link <input name="etsy_url" type="url" placeholder="Optional Etsy listing URL" /></label>
               <label class="checkbox"><input name="new_arrival" type="checkbox" /> New Arrival</label>
               <label class="checkbox"><input name="is_published" type="checkbox" /> Publish now</label>
-              <button class="button button-dark" type="submit">Save artwork <span>↗</span></button>
+              <div class="studio-editor-actions">
+                <button class="button button-dark" type="submit">Save artwork <span>↗</span></button>
+                <button class="button button-quiet" id="delete-artwork" type="button">Remove listing</button>
+              </div>
               <p class="studio-status" id="editor-status" role="status"></p>
             </form>
           </div>
@@ -82,6 +87,6 @@
     </main>
     <iframe id="catalog-source" src="index.html" title="Catalog data" hidden></iframe>
     <script src="supabase-config.js"></script>
-    <script type="module" src="studio.js"></script>
+    <script type="module" src="studio.js?v=7"></script>
   </body>
 </html>
