@@ -69,6 +69,18 @@ function imageOrderPicker(input, container) {
       action('Make main', index === 0, 0);
       action('Move earlier', index === 0, index - 1);
       action('Move later', index === items.length - 1, index + 1);
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.textContent = 'Remove photo';
+      remove.setAttribute('aria-label', `Remove photo ${index + 1}`);
+      remove.disabled = items.length === 1;
+      remove.addEventListener('click', () => {
+        const [removed] = items.splice(index, 1);
+        if (removed.file) URL.revokeObjectURL(removed.url);
+        render();
+        container.children[Math.min(index, items.length - 1)]?.querySelector('button:not(:disabled)')?.focus();
+      });
+      card.append(remove);
       container.append(card);
     });
   };
